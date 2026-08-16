@@ -1,0 +1,11 @@
+# Gradle build output. The wrapper itself (gradlew, gradlew.bat, gradle/wrapper/)
+# is committed on purpose — the Plugin Hub builds this repo with it.
+build/
+.gradle/
+
+# Editor / OS noise
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db

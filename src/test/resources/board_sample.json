@@ -1,0 +1,277 @@
+{
+    "eventId": "NSM930",
+    "name": "Hurt Summer Bingo 2026",
+    "format": "Showdown",
+    "cols": 4,
+    "rows": 4,
+    "numTiers": 5,
+    "startDate": "2026-07-22T17:00:00.000Z",
+    "endDate": "2026-08-05T17:00:00.000Z",
+    "teams": [
+        {
+            "name": "The Dark Knights",
+            "points": 3429,
+            "players": [
+                "Hurt Dark",
+                "nov 188",
+                "ElderSpoonz",
+                "CanRileyReid",
+                "Lord Scorpio",
+                "knife615",
+                "DEEK EU",
+                "Tw1st3d1ron",
+                "sloppyHollow"
+            ]
+        },
+        {
+            "name": "Show Dong 2.0 in",
+            "points": 2991,
+            "players": [
+                "I Fade I",
+                "RowdyRaustin",
+                "ocd bosslog",
+                "Froyo27",
+                "200M Pray",
+                "C-BPM",
+                "garythesaint",
+                "Quad God",
+                "sandy check"
+            ]
+        }
+    ],
+    "team": "The Dark Knights",
+    "board": [
+        {
+            "pos": 1,
+            "id": 1,
+            "title": "Stop all the yelling!",
+            "description": "Bosses that just seem to yell!",
+            "img": "events/NSM930/images/hidyboy.png",
+            "points": 10,
+            "goal": 1,
+            "done": false,
+            "tags": [
+                "Boss: Chaos Fanatic",
+                "Combat",
+                "Boss: Crazy Archaeologist",
+                "Boss: Deranged Archaeologist",
+                "Boss: General Graardor",
+                "Boss: Commander Zilyana",
+                "Skill: Thieving",
+                "Skilling",
+                "XP"
+            ],
+            "items": [],
+            "groups": [],
+            "tier": 3,
+            "maxTier": 5,
+            "score": 3076134.4,
+            "tierThreshold": 1000000,
+            "rates": [
+                {
+                    "label": "Boss: Chaos Fanatic",
+                    "rate": "2400 pts/KC"
+                },
+                {
+                    "label": "Boss: Crazy Archaeologist",
+                    "rate": "2200 pts/KC"
+                },
+                {
+                    "label": "Boss: Deranged Archaeologist",
+                    "rate": "2200 pts/KC"
+                },
+                {
+                    "label": "Boss: General Graardor",
+                    "rate": "4500 pts/KC"
+                },
+                {
+                    "label": "Boss: Commander Zilyana",
+                    "rate": "4500 pts/KC"
+                },
+                {
+                    "label": "Skill: Thieving",
+                    "rate": "0.4 pts/XP"
+                }
+            ]
+        },
+        {
+            "pos": 2,
+            "id": 8,
+            "title": "Varrock Sewers",
+            "description": "Bosses in the sewers",
+            "img": "events/NSM930/images/Scurry__follower.png",
+            "points": 10,
+            "goal": 1,
+            "done": false,
+            "tags": [
+                "Boss: Obor",
+                "Combat",
+                "Boss: Bryophyta",
+                "Boss: Scurrius",
+                "Activity: Clue Scrolls (Beginner)",
+                "Clues"
+            ],
+            "items": [],
+            "groups": [],
+            "tier": 5,
+            "maxTier": 5,
+            "score": 5006500,
+            "tierThreshold": 1000000,
+            "rates": [
+                {
+                    "label": "Boss: Obor",
+                    "rate": "18000 pts/KC"
+                },
+                {
+                    "label": "Boss: Bryophyta",
+                    "rate": "18000 pts/KC"
+                },
+                {
+                    "label": "Boss: Scurrius",
+                    "rate": "2500 pts/KC"
+                },
+                {
+                    "label": "Activity: Clues (Beginner)",
+                    "rate": "4000 pts/count"
+                }
+            ]
+        },
+        {
+            "pos": 3,
+            "id": 14,
+            "title": "Prison Break",
+            "description": "Welcome to hell.\n\n(Nex is weighted a bit lower to incentivize small teams for the drops)",
+            "img": "events/NSM930/images/prisonbreak.png",
+            "points": 10,
+            "goal": 1,
+            "done": true,
+            "tags": [
+                "Boss: Corrupted Gauntlet",
+                "Combat",
+                "Boss: Gauntlet",
+                "Boss: Nex",
+                "Skill: Herblore",
+                "Skilling",
+                "XP"
+            ],
+            "items": [
+                {
+                    "label": "Dragon Warhammer",
+                    "need": 1,
+                    "approved": 1
+                },
+                {
+                    "label": "Nex Unique (not pet)",
+                    "need": 1,
+                    "approved": 0
+                }
+            ],
+            "groups": [],
+            "tier": 5,
+            "maxTier": 5,
+            "score": 5250938.38,
+            "tierThreshold": 1000000,
+            "rates": [
+                {
+                    "label": "Boss: Corrupted Gauntlet",
+                    "rate": "12000 pts/KC"
+                },
+                {
+                    "label": "Boss: Gauntlet",
+                    "rate": "7813 pts/KC"
+                },
+                {
+                    "label": "Boss: Nex",
+                    "rate": "6000 pts/KC"
+                },
+                {
+                    "label": "Skill: Herblore",
+                    "rate": "0.3125 pts/XP"
+                },
+                {
+                    "label": "Dragon Warhammer",
+                    "rate": "450000 pts/item"
+                },
+                {
+                    "label": "Nex Unique (not pet)",
+                    "rate": "125000 pts/item"
+                }
+            ],
+            "players": [
+                {
+                    "name": "Tw1st3d1ron",
+                    "points": 999195,
+                    "lines": [
+                        {
+                            "label": "Corrupted Gauntlet",
+                            "gain": 70,
+                            "unit": "KC",
+                            "points": 840000
+                        },
+                        {
+                            "label": "Gauntlet",
+                            "gain": 10,
+                            "unit": "KC",
+                            "points": 78130
+                        },
+                        {
+                            "label": "Herblore",
+                            "gain": 259408,
+                            "unit": "XP",
+                            "points": 81065
+                        }
+                    ]
+                },
+                {
+                    "name": "Hurt Dark",
+                    "points": 978259.375,
+                    "lines": [
+                        {
+                            "label": "Nex",
+                            "gain": 163,
+                            "unit": "KC",
+                            "points": 978000
+                        },
+                        {
+                            "label": "Herblore",
+                            "gain": 830,
+                            "unit": "XP",
+                            "points": 259.375
+                        }
+                    ]
+                },
+                {
+                    "name": "ElderSpoonz",
+                    "points": 937346.25,
+                    "lines": [
+                        {
+                            "label": "Corrupted Gauntlet",
+                            "gain": 4,
+                            "unit": "KC",
+                            "points": 48000
+                        },
+                        {
+                            "label": "Nex",
+                            "gain": 73,
+                            "unit": "KC",
+                            "points": 438000
+                        },
+                        {
+                            "label": "Herblore",
+                            "gain": 4308,
+                            "unit": "XP",
+                            "points": 1346.25
+                        },
+                        {
+                            "label": "Dragon Warhammer",
+                            "gain": 1,
+                            "unit": "item",
+                            "points": 450000
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "hiddenTiles": false
+}

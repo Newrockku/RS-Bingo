@@ -1,0 +1,7 @@
+# Normalise to LF in the repository. gradlew is a shell script: committed with CRLF
+# it fails on Linux with a "bad interpreter" error, which is exactly where the
+# Plugin Hub builds this.
+* text=auto eol=lf
+
+*.png binary
+*.jar binary

@@ -1,0 +1,83 @@
+/*
+ * RuneLite external plugin for rs-bingo.com.
+ *
+ * Build:   ./gradlew build
+ * Run:     ./gradlew run     (launches RuneLite with this plugin side-loaded)
+ *
+ * Needs JDK 11 — that is what the RuneLite client targets, and a newer JDK will
+ * produce class files the client refuses to load.
+ */
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenLocal()
+    maven { url = 'https://repo.runelite.net' }
+    mavenCentral()
+}
+
+def runeLiteVersion = 'latest.release'
+
+dependencies {
+    compileOnly group: 'net.runelite', name: 'client', version: runeLiteVersion
+
+    compileOnly 'org.projectlombok:lombok:1.18.28'
+    annotationProcessor 'org.projectlombok:lombok:1.18.28'
+
+    // Tile art is uploaded as whatever the organiser had, and .webp is common —
+    // but the JDK ships no WebP reader, so those tiles decoded to null and drew as
+    // blank cells. This is a pure-Java reader that registers itself through the
+    // ImageIO service loader; no code references it directly.
+    implementation 'com.twelvemonkeys.imageio:imageio-webp:3.12.0'
+
+    testImplementation group: 'net.runelite', name: 'client', version: runeLiteVersion
+    testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+}
+
+group = 'com.rsbingo'
+version = '1.0.0'
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+
+    // `release` rather than source/targetCompatibility: it also pins the *API* to
+    // Java 11, so building on a newer JDK can't quietly link against a method that
+    // doesn't exist in the runtime RuneLite actually ships on.
+    options.release = 11
+}
+
+// Side-load into a real client for testing.
+tasks.register('run', JavaExec) {
+    dependsOn 'build'
+    group = 'runelite'
+    description = 'Launch RuneLite with this plugin loaded'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.rsbingo.RsBingoPluginTest'
+
+    // ExternalPluginManager.loadBuiltin() refuses to run without assertions on —
+    // it throws "Assertions are not enabled, add '-ea' to your VM options" and the
+    // client never starts.
+    jvmArgs '-ea'
+}
+
+// Draw the panel to PNGs without a client — see PanelPreview.
+//   ./gradlew preview -Pevent=NSM930
+tasks.register('preview', JavaExec) {
+    dependsOn 'testClasses'
+    group = 'runelite'
+    description = 'Render the side panel to build/preview/*.png without launching a client'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.rsbingo.PanelPreview'
+
+    systemProperty 'rs.url', findProperty('url') ?: 'https://rs-bingo.com'
+    systemProperty 'rs.event', findProperty('event') ?: ''
+    systemProperty 'rs.team', findProperty('team') ?: ''
+    systemProperty 'rs.tile', findProperty('tile') ?: '0'
+    systemProperty 'rs.images', findProperty('images') ?: 'true'
+    systemProperty 'rs.theme', findProperty('theme') ?: ''
+    systemProperty 'rs.player', findProperty('player') ?: ''
+    systemProperty 'rs.token', findProperty('token') ?: ''
+    systemProperty 'rs.out', findProperty('out')
+        ?: layout.buildDirectory.dir('preview').get().asFile.absolutePath
+}
