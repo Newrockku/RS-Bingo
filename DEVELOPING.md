@@ -198,12 +198,31 @@ board renders as blank fills. Segments are percent-encoded (gallery filenames
 contain spaces), and `.`/`..` are stripped rather than resolved, so a path can
 never climb out of `images/`.
 
-**WebP tile art needs a decoder.** Java's `ImageIO` ships no WebP reader — it has
-JPG, PNG, GIF, BMP, TIFF and WBMP — so a `.webp` tile decoded to null and fell back
-to a plain cell while the site rendered it fine. `build.gradle` therefore depends on
-`com.twelvemonkeys.imageio:imageio-webp`, a pure-Java reader that registers itself
-through the ImageIO service loader; no code references it directly. Drop that
-dependency and WebP tiles go blank again.
+**WebP tile art is converted by the site, not decoded here.** Java's `ImageIO`
+ships no WebP reader — it has JPG, PNG, GIF, BMP, TIFF and WBMP — so a `.webp` tile
+decodes to null and falls back to a plain cell while the site renders it fine.
+Roughly one tile image in ten is WebP.
+
+This was originally fixed with `com.twelvemonkeys.imageio:imageio-webp`, a pure-Java
+reader. That broke the Plugin Hub build: the hub bundles the whole `runtimeClasspath`
+into one jar and SHA-256 verifies every artifact against
+`package/verification-template/build.gradle`, and an unlisted dependency fails
+resolution. Getting one listed needs a manual maintainer review the hub warns is
+significantly slower, and it asks submitters to avoid new dependencies outright.
+
+So `resolve()` sends `.webp` through `plugin_img.php?src=<site-relative path>`, which
+re-encodes to PNG and caches the result. **This plugin has no third-party
+dependencies, and should not gain any** — check with:
+
+```
+./gradlew dependencies --configuration runtimeClasspath   # must print "No dependencies"
+```
+
+Two deliberate limits. Absolute `http(s)` art is left alone rather than proxied — the
+converter serves files already on the site and must never fetch arbitrary hosts on
+request. And if the site's PHP lacks WebP support it returns the original bytes, so
+those tiles are blank exactly as they were before, rather than the board failing;
+`plugin_img.php?probe=1` reports whether a given host can convert.
 
 ## A note on image weight
 

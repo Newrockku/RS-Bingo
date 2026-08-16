@@ -103,8 +103,8 @@ started yet.
 pressed *Generate new* on the dashboard, the previous token stopped working — copy
 the new one.
 
-**A tile shows a plain square instead of artwork.** Some image formats can't be
-drawn in the client. The tile still works normally.
+**A tile shows a plain square instead of artwork.** The artwork failed to load — the
+tile itself still works normally, and everything else on it is accurate.
 
 **Nothing loads.** Check the event code is correct and the event still exists on the
 site.
