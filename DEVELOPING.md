@@ -173,6 +173,42 @@ A refresh landing while a tile is open updates that tile in place rather than
 returning to the grid — at the default 60s interval, the alternative is being
 thrown out of whatever you were reading.
 
+## How the Plugin Hub builds this
+
+`runelite-plugin.properties` sets `build=standard`, which means **the hub ignores
+this repo's `build.gradle` and compiles with its own**:
+
+```groovy
+compileOnly "net.runelite:client"
+compileOnly 'org.projectlombok:lombok:1.18.30'
+annotationProcessor 'org.projectlombok:lombok:1.18.30'
+compileOnly 'org.jetbrains:annotations:23.0.0'
+```
+
+So anything `src/main` needs to compile must come from that list. The local
+`build.gradle` matches it deliberately — its Lombok version included — and the
+`run` and `preview` tasks are development conveniences the hub never sees.
+
+Two traps worth knowing, both of which cost a run of the submission build:
+
+- **`build` is mandatory.** Leaving it out fails the submission with `"build" must
+  be set`, thrown by the packager before Gradle is involved. Nothing appears in the
+  Gradle log, so it presents as a build failure containing no build error.
+- **Dependency verification.** The hub copies its own
+  `gradle/verification-metadata.xml` over the checkout and rejects any artifact
+  with no SHA-256 entry. `net.runelite*` groups are trusted wholesale; everything
+  else needs an entry, which is why the Lombok version is pinned to one they carry.
+
+To reproduce the hub build locally, unpack
+`https://github.com/runelite/plugin-hub-tooling/releases/download/v3/bundle.tar.zst`
+and run its Gradle against a checkout **on JDK 11** — the bundled API recorder is a
+javac plugin and dies on newer JDKs with an `IllegalAccessError` about
+`com.sun.tools.javac.code`, which is an artifact of the JDK, not your code:
+
+```
+gradle --no-build-cache --init-script target_init.gradle   runelitePluginHubPackage runelitePluginHubManifest
+```
+
 ## Tests
 
 `./gradlew test` covers the display logic the plugin does own: tier progress and
