@@ -1,4 +1,4 @@
-# Developing the RS Bingo plugin
+# Developing the RS-Bingo plugin
 
 Build instructions and the reasoning behind the parts that are easy to break.
 Player-facing documentation lives in [README.md](README.md).
@@ -50,7 +50,7 @@ window that is never shown, so the board would otherwise render blank.
 
 ## Configuring
 
-RuneLite → Settings → **RS Bingo**:
+RuneLite → Settings → **RS-Bingo**:
 
 | Setting | Meaning |
 | --- | --- |

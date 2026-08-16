@@ -1,4 +1,4 @@
-# RS Bingo
+# RS-Bingo
 
 Follow your clan's [rs-bingo.com](https://rs-bingo.com) bingo event from inside
 RuneLite: your team's board, what each tile needs, who has done what, and how your
@@ -6,7 +6,7 @@ team is placed — plus submitting drops without leaving the game.
 
 ## Getting started
 
-1. Open **RS Bingo** in the sidebar.
+1. Open **RS-Bingo** in the sidebar.
 2. Open the settings (the wrench) and either:
    - paste the **Event code** your organiser gave you (something like `NSM930`), or
    - paste an **Account token** and pick your event from a list — see below.
@@ -19,7 +19,7 @@ you belong to appear in an **Event** dropdown at the top of the panel.
 
 1. Sign in on rs-bingo.com and open your **Dashboard**.
 2. In the **RuneLite plugin** panel, press **Show**, then **Copy**.
-3. Paste it into *Settings → RS Bingo → **Account token***.
+3. Paste it into *Settings → RS-Bingo → **Account token***.
 
 That token only lists your events. It cannot change an event, submit anything, or
 sign in as you. To invalidate it, press **Generate new** on the dashboard — the old

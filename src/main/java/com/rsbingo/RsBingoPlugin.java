@@ -24,8 +24,8 @@ import javax.swing.SwingUtilities;
 
 @Slf4j
 @PluginDescriptor(
-	name = "RS Bingo",
-	description = "View a rs-bingo.com event board in the side panel",
+	name = "RS-Bingo",
+	description = "Follow an rs-bingo.com bingo event: your team's board, tile progress and standings, with optional in-client submissions",
 	tags = {"bingo", "clan", "event", "board"}
 )
 public class RsBingoPlugin extends Plugin
@@ -76,7 +76,7 @@ public class RsBingoPlugin extends Plugin
 
 		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "/panel_icon.png");
 		navButton = NavigationButton.builder()
-			.tooltip("RS Bingo")
+			.tooltip("RS-Bingo")
 			.icon(icon)
 			// Sidebar order: NavigationButton.COMPARATOR sorts on priority ascending
 			// (then tooltip), so a lower number sits higher up.
