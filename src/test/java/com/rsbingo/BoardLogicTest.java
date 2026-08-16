@@ -227,6 +227,38 @@ public class BoardLogicTest
 			TileImageCache.resolve("https://rs-bingo.com", "./a/../a/b.png"));
 	}
 
+	/**
+	 * WebP has no reader in the JDK, so those tiles are fetched through the site's
+	 * converter instead. The whole path goes in one query value — encoded slashes
+	 * included — because it is a parameter, not a path.
+	 */
+	@Test
+	public void webpIsRoutedThroughTheConverter()
+	{
+		assertEquals("https://rs-bingo.com/plugin_img.php?src=events%2FNSM930%2Fimages%2Fx.webp",
+			TileImageCache.resolve("https://rs-bingo.com", "events/NSM930/images/x.webp"));
+
+		assertEquals("https://rs-bingo.com/plugin_img.php?src=images%2Fdefault%2Fraids_fit.webp",
+			TileImageCache.resolve("https://rs-bingo.com", "default/raids_fit.webp"));
+
+		// The converter is told the cleaned path, so "." and ".." cannot reach it.
+		assertEquals("https://rs-bingo.com/plugin_img.php?src=images%2Fa%2Fa%2Fb.webp",
+			TileImageCache.resolve("https://rs-bingo.com", "./a/../a/b.webp"));
+
+		// Case is the file system's business, not ours.
+		assertEquals("https://rs-bingo.com/plugin_img.php?src=images%2Fg%2FA.WEBP",
+			TileImageCache.resolve("https://rs-bingo.com", "g/A.WEBP"));
+
+		// Formats the client can already decode keep going straight to the file.
+		assertEquals("https://rs-bingo.com/images/g/a.png",
+			TileImageCache.resolve("https://rs-bingo.com", "g/a.png"));
+
+		// Off-site art is left alone: our converter must never fetch someone else's
+		// server on request.
+		assertEquals("https://i.imgur.com/abc.webp",
+			TileImageCache.resolve("https://rs-bingo.com", "https://i.imgur.com/abc.webp"));
+	}
+
 	@Test
 	public void absoluteAndEmptyImageReferences()
 	{

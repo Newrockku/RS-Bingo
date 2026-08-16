@@ -196,6 +196,9 @@ class TileImageCache
 	 *
 	 * Treating that third case as root-relative is what left most of a board blank:
 	 * the paths 404 and the cells fall back to a plain fill.
+	 *
+	 * WebP is sent the long way round, through the site's converter — see
+	 * {@link #CONVERTER}.
 	 */
 	static String resolve(String baseUrl, String img)
 	{
@@ -207,6 +210,8 @@ class TileImageCache
 		final String path = img.trim();
 		if (path.startsWith("http://") || path.startsWith("https://"))
 		{
+			// Somebody else's server; we can neither convert it nor should we ask ours
+			// to fetch it on our behalf. A WebP link from off-site stays undecodable.
 			return path;
 		}
 
@@ -218,19 +223,47 @@ class TileImageCache
 
 		if (path.startsWith("events/"))
 		{
-			return base + "/" + path;
+			return isWebp(path) ? convert(base, path) : base + "/" + path;
 		}
 
-		final StringBuilder url = new StringBuilder(base).append("/images");
+		// Gallery images: the stored reference is relative to images/, and the
+		// segments are rebuilt rather than concatenated because the filenames
+		// contain spaces and quotes.
+		final StringBuilder plain = new StringBuilder("images");
+		final StringBuilder encoded = new StringBuilder(base).append("/images");
 		for (String segment : path.replace('\\', '/').split("/"))
 		{
 			if (segment.isEmpty() || ".".equals(segment) || "..".equals(segment))
 			{
 				continue;
 			}
-			url.append('/').append(encodeSegment(segment));
+			plain.append('/').append(segment);
+			encoded.append('/').append(encodeSegment(segment));
 		}
-		return url.toString();
+
+		return isWebp(path) ? convert(base, plain.toString()) : encoded.toString();
+	}
+
+	/**
+	 * The site endpoint that re-encodes WebP as PNG.
+	 *
+	 * The JDK has no WebP reader, so those tiles decoded to null and drew as empty
+	 * cells. Carrying a Java decoder meant shipping a third-party dependency, which
+	 * the Plugin Hub bundles, hash-verifies and explicitly asks submitters to avoid;
+	 * converting on the server keeps this plugin dependency-free. If the site cannot
+	 * convert either, it returns the original and the tile is blank as it was before.
+	 */
+	private static final String CONVERTER = "/plugin_img.php?src=";
+
+	private static boolean isWebp(String path)
+	{
+		return path.length() > 5 && path.regionMatches(true, path.length() - 5, ".webp", 0, 5);
+	}
+
+	/** Whole path in one query value, so the slashes are encoded along with it. */
+	private static String convert(String base, String sitePath)
+	{
+		return base + CONVERTER + encodeSegment(sitePath);
 	}
 
 	/** Percent-encodes one path segment; gallery filenames contain spaces and quotes. */
