@@ -1,227 +1,116 @@
-# RS Bingo — RuneLite plugin
+# RS Bingo
 
-Side panel for following an [rs-bingo.com](https://rs-bingo.com) event: your team's
-board, tile checklists, point rates, per-player progress and the standings. Click a
-tile for its detail view.
+Follow your clan's [rs-bingo.com](https://rs-bingo.com) bingo event from inside
+RuneLite: your team's board, what each tile needs, who has done what, and how your
+team is placed — plus submitting drops without leaving the game.
 
-Viewing is read-only and needs nothing but an event code, exactly as the site's board
-pages do. Two things reach further, both optional:
+## Getting started
 
-- **Submitting** a drop captures a screenshot and uploads it to rs-bingo.com for
-  review. It only appears when the character you are logged in as is on the team
-  being viewed, and only inside the event's start/end window.
-- **Linking an account** (Settings → Account token) lists the events you belong to.
-  The token is read-only and scoped to that one endpoint; see below.
+1. Open **RS Bingo** in the sidebar.
+2. Open the settings (the wrench) and either:
+   - paste the **Event code** your organiser gave you (something like `NSM930`), or
+   - paste an **Account token** and pick your event from a list — see below.
+3. The board loads, and refreshes itself every minute.
 
-Licensed BSD 2-Clause. See `LICENSE`.
+### Listing your own events
 
-## Building
+Rather than typing event codes, you can link your account once and have every event
+you belong to appear in an **Event** dropdown at the top of the panel.
 
-```sh
-cd runelite-plugin
-./gradlew build          # compile + jar + tests
-./gradlew run            # launch RuneLite with the plugin side-loaded
-```
+1. Sign in on rs-bingo.com and open your **Dashboard**.
+2. In the **RuneLite plugin** panel, press **Show**, then **Copy**.
+3. Paste it into *Settings → RS Bingo → **Account token***.
 
-The Gradle wrapper is checked in, so no Gradle install is needed; it fetches its
-own on first run. The client itself comes from `https://repo.runelite.net`.
+That token only lists your events. It cannot change an event, submit anything, or
+sign in as you. To invalidate it, press **Generate new** on the dashboard — the old
+one stops working immediately, so remember to paste the new one.
 
-Any JDK 11 or newer works. The build sets `options.release = 11`, which pins both
-the bytecode *and* the API surface to Java 11 — so building on a newer JDK cannot
-quietly produce class files, or link against methods, that the client won't load.
+## The panel
 
-`./gradlew run` starts a real client via `RsBingoPluginTest`, which is the normal
-way to develop an external plugin.
+Across the top: your event, the colour theme, and the team you're viewing. Below:
 
-## Previewing without a client
+**The board.** Each tile shows its artwork, a progress bar along the bottom, and in
+the corner either what it's worth (`10p`) or — on Showdown events — the tier reached
+(`T3`). A gold border means finished. Hover for a summary, click for the full view.
 
-`./gradlew run` needs a full client and a login. To just *look* at the panel:
+**Standings.** Every team, ranked, with the one you're viewing highlighted.
 
-```sh
-./gradlew preview -Pevent=NSM930
-```
+**Team.** Who is on that team, with your own character marked **(you)**.
 
-That draws the real panel — same components, same fonts, same live data — and
-writes `board.png` and `tile.png` to `build/preview/`. It takes a few seconds and
-never opens a window.
+Under the event name you'll find the countdown — how long is left, or how long until
+the event starts — and the event codeword once the organiser has released it.
 
-| Property | Default | Meaning |
-| --- | --- | --- |
-| `-Pevent=` | *(required)* | Event code to load. |
-| `-Purl=` | `https://rs-bingo.com` | Site to read from, e.g. `http://localhost/bingotest`. |
-| `-Pteam=` | top of the table | Team to show. |
-| `-Ptile=` | `0` | Which tile to open for `tile.png`, by board order. |
-| `-Pimages=` | `true` | `false` renders the no-artwork fallback. |
-| `-Pout=` | `build/preview` | Where to write the PNGs. |
+## Reading a tile
 
-Two things it has to do that are easy to get wrong if you rewrite it: the frame is
-undecorated (so the panel gets exactly the 225px the client gives it, not 225 plus
-window borders), and layout is forced synchronously before each capture —
-`revalidate()` only *queues* a layout pass, and nothing pumps that queue for a
-window that is never shown, so the board would otherwise render blank.
+Click any tile:
 
-## Configuring
+- **Point Rates** — what each boss, skill and item is actually worth, for example
+  `Boss: Nex — 6000 pts/KC`. The quickest way to see what's worth chasing.
+- **Player Progress** — each teammate's total on that tile, and where it came from.
+- **Checklist** — what the tile needs, in three states:
 
-RuneLite → Settings → **RS Bingo**:
+  | Mark | Meaning |
+  | --- | --- |
+  | `✓` | approved |
+  | `?` | submitted, waiting on a reviewer |
+  | `○` | nobody has done this yet |
 
-| Setting | Meaning |
+  Whoever submitted an item is named beside it.
+- **XP tiles** show the team's total against the goal, and who contributed.
+
+## Submitting a drop
+
+Open the tile, pick the item in the **Submit** box, and press **Take screenshot &
+submit**. Your game window is captured, stamped with the event name, your character
+and the event codeword, and uploaded for review. The item turns to `?` immediately.
+
+Nothing counts until an organiser approves it.
+
+The Submit box only appears when **all** of these hold:
+
+- the character you're logged in as is on the team you're viewing
+- the event has started and has not ended
+- the tile isn't already complete
+- the item isn't already approved or awaiting review
+
+If you can't see it, one of those is the reason.
+
+## Settings
+
+| Setting | What it does |
 | --- | --- |
-| Account token | Optional. From the site's dashboard; lists your events in the panel. |
-| Event code | The ID from the organiser, e.g. `NSM930`. Blank hides the board. |
-| Site URL | Defaults to `https://rs-bingo.com`. Only change if self-hosting. |
-| Refresh (seconds) | Board re-fetch interval. `0` disables it; anything under 15 is floored to 15. |
-| Show tile images | Draw tile artwork. Off falls back to tier-graded colour fills. |
+| **Account token** | Optional. Lists your events in the panel. Comes from your dashboard. |
+| **Event code** | Which event to show. Set for you if you use the Event dropdown. |
+| **Site URL** | Leave as-is unless you run your own copy of the site. |
+| **Refresh (seconds)** | How often the board updates. `0` turns it off. |
+| **Show tile images** | Turn off to save bandwidth — a board's artwork can run to several MB the first time it loads. |
 
-The event code lives here and only here. It used to be editable in the panel as
-well, which meant two copies of one setting: the panel wrote its copy back over
-whatever had been typed in this pane. With an account linked you rarely touch it —
-the panel's **Event** dropdown sets it for you. The team you pick is remembered the
-same way.
+## What the plugin sends
 
-## How it talks to the site
+- **Always:** the event code, to fetch the board. Nothing about your account.
+- **If you link an account:** your token, to list your events.
+- **Only when you press submit:** a screenshot of your game window, your character
+  name, and the item you're claiming.
 
-Everything comes from rs-bingo.com. Reads need only an event code; the last two are
-the exceptions described above.
+Screenshots are never taken or sent unless you press the submit button.
 
-```
-plugin_board.php?eventId=NSM930                            -> event info + team list
-plugin_board.php?eventId=NSM930&team=The%20Dark%20Knights  -> the above + that board
-plugin_board.php?eventId=NSM930&team=...&tile=3            -> plus tile 3's player breakdown
-plugin_themes.php                                          -> the site's colour themes
-plugin_events.php   (X-Bingo-Token)                        -> the linked account's events
-submit_item.php     (source=plugin)                        -> file a submission
-```
+## Troubleshooting
 
-## Linking an account (optional)
+**The Submit box isn't showing.** Check the four conditions above. Most often the
+character you're logged in as isn't on the team being viewed, or the event hasn't
+started yet.
 
-The panel can list the events you belong to instead of making you type codes. Sign
-in on the site, open **/plugin_link.php**, and paste the token into *Settings → RS
-Bingo → Account token*.
+**My events aren't listed.** Make sure the Account token was pasted in full. If you
+pressed *Generate new* on the dashboard, the previous token stopped working — copy
+the new one.
 
-The token is deliberately **not** a session. It is a third signed type alongside
-`event` and `user`, it names only the user id, and `plugin_events.php` is the only
-endpoint that accepts it — `auth_sessionClaims()` stays cookie-only, so this cannot
-become account access by being pasted somewhere else. Losing it reveals which events
-you are in; it cannot change one, submit as you, or sign you in. Rotate
-`events/auth_secret.json` to revoke every token at once.
+**A tile shows a plain square instead of artwork.** Some image formats can't be
+drawn in the client. The tile still works normally.
 
-Everything else works without it: an event code alone still views a board, and
-submitting is authorised by roster membership, not by this.
+**Nothing loads.** Check the event code is correct and the event still exists on the
+site.
 
-The response is already scored. The plugin does **no** scoring of its own, on
-purpose: those rules already exist five times over in this project (`score_lib.php`,
-`game.html`, `overview.html`, and both overlays) and have drifted apart before — a
-Showdown tile tagged `XP` was once scored two different ways depending on which
-page you looked at. A sixth copy, in a language nothing else here uses, is the
-last place that bug should be able to hide. The server decides; the plugin draws.
+---
 
-That extends to the Showdown tier line and the per-player breakdown.
-`sc_computeUimTileBreakdown()` in `score_lib.php` produces the itemised lines
-*and* the tile's total, with the total summed from those very lines — so the
-"Player Progress" card always adds up to the score the tier was derived from.
-`sc_computeUimTileScore()` is a one-line wrapper over it, which is what keeps a
-single implementation feeding both the site's points and the panel's display.
-
-**Payload split.** Point rates are small and static, so every tile carries them.
-The per-player breakdown is neither — it was 80% of the response — so only the
-tile being looked at carries one. The panel asks by appending `&tile=N` to the
-board fetch it was already making, so a refresh stays one request either way:
-
-| Request | Size (NSM930, 16 tiles, 9 players) |
-| --- | --- |
-| Board, no tile open | ~13KB |
-| Board with a tile open | ~15KB |
-| Breakdowns for every tile (rejected) | ~40KB |
-| Raw event file | ~616KB |
-
-## Notes on the UI
-
-A RuneLite side panel is about 225px wide, so the tile "modal" is a full-panel
-view swapped in over the grid with a back button, rather than a floating dialog.
-It follows the website's modal section for section: artwork, title, tier and
-points, a progress bar, then **Description**, **Point Rates** and **Player
-Progress**.
-
-Checklist items carry three states, as the site draws them: `✓` approved, `?`
-submitted and awaiting review, `○` untouched. The middle one matters — without it
-an item someone has already sent proof for is indistinguishable from one nobody
-has attempted, and players re-submit. Pending submissions are indexed by
-`sc_buildSubmissionMapByTeam()`, the same function that indexes approved ones, so
-the two lookups cannot key items differently.
-
-Point Rates is the one that matters for actually playing: every boss, skill,
-activity and item on the tile with what one of each is worth (`Boss: Nex` /
-`6000 pts/KC`). Showdown tiles show it instead of the bare tag list, which named
-the same things without saying what any of them paid. Player Progress then shows
-each teammate's total and the kills, XP and drops behind it. On Showdown tiles
-these replace the plain item checklist, as they do on the site.
-
-Board cells show the tile's artwork at full brightness with a progress bar along
-the bottom, and in the corner either the tier (Showdown) or what the tile is worth
-(`10p`). Progress is carried by the bar and the border rather than by dimming the
-art, which only made tiles harder to tell apart at 50px. The tooltip repeats the
-title, completion and item progress.
-
-Three things are load-bearing and easy to undo by accident:
-
-- **Both cards scroll.** `PluginPanel(false)` gives no scrolling of its own, and a
-  7x7 board or a long checklist outruns the panel's height.
-- **Scrolled content tracks the viewport width** (`VerticalContent`). Without it a
-  panel keeps its widest child's preferred width, and with no horizontal scrollbar
-  the overflow is silently cut off.
-- **Wrapping text is a `JTextArea`, not an HTML `JLabel`.** Swing treats
-  `width:Npx` as a hint, not a constraint; tag lists and descriptions rendered past
-  the panel edge and lost words mid-token. Plain text also can't be tripped up by
-  markup in an organiser's description.
-- **Every `JTextArea` is told its width** (`setWrapped`, and the `label.setSize`
-  in `valueRow`). A text area derives its wrapped height from its current width,
-  and inside these layouts it is asked for that height before it has been given a
-  width — so it answers "one line" and everything past the first wrap is clipped.
-  This bites hardest the moment a scrollbar appears and takes another 8px.
-- **Caret updates are disabled on them too.** `setText()` moves the caret, and a
-  text area drags its scroll pane along to follow it — opening a tile landed you
-  in the middle of Player Progress instead of at the tile's title.
-
-A refresh landing while a tile is open updates that tile in place rather than
-returning to the grid — at the default 60s interval, the alternative is being
-thrown out of whatever you were reading.
-
-## Tests
-
-`./gradlew test` covers the display logic the plugin does own: tier progress and
-the MAX case, item counting, image URL resolution, number formatting, and tooltip
-escaping. `BoardParsingTest` parses a real captured `plugin_board.php` response
-from `src/test/resources/board_sample.json` — Gson maps by field name with no
-annotations, so a rename on the PHP side would otherwise fail silently at runtime
-and simply draw an empty board.
-
-## Tile images
-
-A tile's stored `img` comes in three shapes and they are **not** interchangeable.
-`TileImageCache.resolve()` mirrors `safeImgSrc()` in `game.html`:
-
-| Stored value | Resolves to |
-| --- | --- |
-| `https://…` | itself |
-| `events/<id>/images/x.png` | `<site>/events/<id>/images/x.png` (per-event upload) |
-| `OFM055/x.png`, `default/x.png` | `<site>/images/OFM055/x.png` (shared gallery) |
-
-Getting the third case wrong is not subtle — every gallery path 404s and most of a
-board renders as blank fills. Segments are percent-encoded (gallery filenames
-contain spaces), and `.`/`..` are stripped rather than resolved, so a path can
-never climb out of `images/`.
-
-**WebP tile art does not render.** Java's `ImageIO` ships no WebP reader — the
-formats available are JPG, PNG, GIF, BMP, TIFF and WBMP — so a `.webp` tile decodes
-to null and falls back to the plain graded cell. The site shows it fine, since
-browsers decode WebP. Either re-save such tiles as PNG, or add a pure-Java decoder
-(`com.twelvemonkeys.imageio:imageio-webp`) if WebP art becomes common; that is a
-dependency the plugin does not currently carry.
-
-## A note on image weight
-
-Tile art is served at full resolution — one tile on `NSM930` is 2.4MB, and the
-16-tile board totals 6.6MB. The plugin decodes each image down to 96px and caches
-it, and RuneLite's shared `OkHttpClient` has a disk cache, so this is a one-off
-per player rather than per session. It is still worth serving thumbnails from the
-site if boards get much larger; the plugin never draws above 96px.
+Not affiliated with Jagex. Licensed BSD 2-Clause — see [LICENSE](LICENSE).
+Building the plugin: see [DEVELOPING.md](DEVELOPING.md).
