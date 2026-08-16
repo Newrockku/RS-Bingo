@@ -22,8 +22,12 @@ def runeLiteVersion = 'latest.release'
 dependencies {
     compileOnly group: 'net.runelite', name: 'client', version: runeLiteVersion
 
-    compileOnly 'org.projectlombok:lombok:1.18.28'
-    annotationProcessor 'org.projectlombok:lombok:1.18.28'
+    // 1.18.30 specifically: the Plugin Hub copies its own dependency-verification
+    // metadata over the build and fails anything without a SHA-256 entry there. It
+    // carries hashes for 1.18.4, 1.18.16, 1.18.20 and 1.18.30 — 1.18.28 built fine
+    // locally and failed the hub build with no obvious connection to Lombok.
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
 
     // No third-party dependencies on purpose. The Plugin Hub bundles and hash-
     // verifies everything on the runtime classpath and asks submitters to avoid
