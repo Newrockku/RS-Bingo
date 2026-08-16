@@ -81,7 +81,6 @@ If you can't see it, one of those is the reason.
 | --- | --- |
 | **Account token** | Optional. Lists your events in the panel. Comes from your dashboard. |
 | **Event code** | Which event to show. Set for you if you use the Event dropdown. |
-| **Site URL** | Leave as-is unless you run your own copy of the site. |
 | **Refresh (seconds)** | How often the board updates. `0` turns it off. |
 | **Show tile images** | Turn off to save bandwidth — a board's artwork can run to several MB the first time it loads. |
 

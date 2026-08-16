@@ -72,6 +72,14 @@ public class RsBingoPlugin extends Plugin
 	@Override
 	protected void startUp()
 	{
+		// A stored URL from before this became fixed — a test copy on localhost, or
+		// the http:// form — would otherwise keep applying invisibly, with no setting
+		// left in the UI to show why nothing loads.
+		if (!RsBingoConfig.SITE_URL.equals(config.baseUrl()))
+		{
+			configManager.setConfiguration(RsBingoConfig.GROUP, "baseUrl", RsBingoConfig.SITE_URL);
+		}
+
 		buildPanel();
 
 		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "/panel_icon.png");

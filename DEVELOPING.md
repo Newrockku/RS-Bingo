@@ -56,7 +56,6 @@ RuneLite → Settings → **RS-Bingo**:
 | --- | --- |
 | Account token | Optional. From the site's dashboard; lists your events in the panel. |
 | Event code | The ID from the organiser, e.g. `NSM930`. Blank hides the board. |
-| Site URL | Defaults to `https://rs-bingo.com`. Only change if self-hosting. |
 | Refresh (seconds) | Board re-fetch interval. `0` disables it; anything under 15 is floored to 15. |
 | Show tile images | Draw tile artwork. Off falls back to tier-graded colour fills. |
 
