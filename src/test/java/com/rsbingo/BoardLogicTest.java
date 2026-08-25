@@ -253,18 +253,26 @@ public class BoardLogicTest
 		assertEquals("https://rs-bingo.com/images/g/a.png",
 			TileImageCache.resolve("https://rs-bingo.com", "g/a.png"));
 
-		// Off-site art is left alone: our converter must never fetch someone else's
-		// server on request.
-		assertEquals("https://i.imgur.com/abc.webp",
-			TileImageCache.resolve("https://rs-bingo.com", "https://i.imgur.com/abc.webp"));
+		// Off-site art is refused outright rather than converted — see
+		// absoluteImageReferencesAreRefused().
+		assertNull(TileImageCache.resolve("https://rs-bingo.com", "https://i.imgur.com/abc.webp"));
 	}
 
+	/**
+	 * An organiser can paste an absolute link into the tile editor and the website
+	 * renders it, but the plugin must not fetch it: the address arrives in an API
+	 * response, and a plugin may only contact addresses that are hardcoded or entered
+	 * by the user. Returning null leaves the cell on its colour fill.
+	 */
 	@Test
-	public void absoluteAndEmptyImageReferences()
+	public void absoluteImageReferencesAreRefused()
 	{
-		// Organisers can paste an absolute URL into the tile editor.
-		assertEquals("https://i.imgur.com/abc.png",
-			TileImageCache.resolve("https://rs-bingo.com", "https://i.imgur.com/abc.png"));
+		assertNull(TileImageCache.resolve("https://rs-bingo.com", "https://i.imgur.com/abc.png"));
+		assertNull(TileImageCache.resolve("https://rs-bingo.com", "http://i.imgur.com/abc.png"));
+
+		// Not just http(s): any scheme is a way out of the site.
+		assertNull(TileImageCache.resolve("https://rs-bingo.com", "file:///etc/passwd"));
+		assertNull(TileImageCache.resolve("https://rs-bingo.com", "//evil.example.com/x.png"));
 
 		assertNull(TileImageCache.resolve("https://rs-bingo.com", ""));
 		assertNull(TileImageCache.resolve("https://rs-bingo.com", null));

@@ -39,7 +39,7 @@ class TileCell extends JPanel
 	private BufferedImage image;
 
 	TileCell(BoardModels.BoardTile tile, BoardModels.Board board, TileImageCache images,
-			 RsBingoConfig config, int size, Runnable onClick)
+			 RsBingoConfig config, String siteUrl, int size, Runnable onClick)
 	{
 		this.tile = tile;
 		this.showdown = board.isShowdown();
@@ -55,7 +55,7 @@ class TileCell extends JPanel
 		}
 
 		final String url = config.showTileImages()
-			? TileImageCache.resolve(config.baseUrl(), tile.img)
+			? TileImageCache.resolve(siteUrl, tile.img)
 			: null;
 		if (url != null)
 		{

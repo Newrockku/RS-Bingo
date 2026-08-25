@@ -48,6 +48,24 @@ window borders), and layout is forced synchronously before each capture —
 `revalidate()` only *queues* a layout pass, and nothing pumps that queue for a
 window that is never shown, so the board would otherwise render blank.
 
+## The site address is hardcoded
+
+`RsBingoConfig.SITE_URL` is the only address the plugin ever contacts, and it is a
+constant rather than a setting. The Plugin Hub requires that every address a plugin
+talks to is either hardcoded or typed by the user, and a hidden setting is neither.
+
+Two consequences worth keeping:
+
+- **A URL in an API response is never fetched.** A tile's `img` may be an absolute
+  link — an organiser can paste one and the website renders it — but
+  `TileImageCache.resolve()` returns `null` for anything containing `://` or
+  starting with `//`, and the cell keeps its colour fill. This is what the hub
+  rejected the first submission for; `absoluteImageReferencesAreRefused()` pins it.
+- **The preview harness is the one caller that passes a different address.**
+  `RsBingoPanel` takes the site URL as a constructor argument purely so
+  `PanelPreview` can render against a local copy; the client always passes the
+  constant, and `src/test` is not in the published jar.
+
 ## Configuring
 
 RuneLite → Settings → **RS-Bingo**:

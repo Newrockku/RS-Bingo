@@ -187,7 +187,7 @@ class TileImageCache
 	 * are not interchangeable:
 	 *
 	 * <ul>
-	 *   <li>an absolute {@code http(s)} URL — an organiser pasted a link; use it</li>
+	 *   <li>an absolute URL — an organiser pasted a link; <b>refused</b>, see below</li>
 	 *   <li>{@code events/<id>/images/x.png} — a per-event upload, already a full
 	 *       path from the site root</li>
 	 *   <li>anything else ({@code OFM055/x.png}, {@code default/x.png}) — a shared
@@ -208,11 +208,18 @@ class TileImageCache
 		}
 
 		final String path = img.trim();
-		if (path.startsWith("http://") || path.startsWith("https://"))
+		if (path.contains("://") || path.startsWith("//"))
 		{
-			// Somebody else's server; we can neither convert it nor should we ask ours
-			// to fetch it on our behalf. A WebP link from off-site stays undecodable.
-			return path;
+			// An organiser can paste an absolute link into the tile editor, and the
+			// website renders it. The plugin will not: this string arrives in an API
+			// response, and a plugin may only contact addresses that are hardcoded or
+			// entered by the user, never ones a server hands it. The tile keeps its
+			// colour fill instead. Anything else here is a path on the site.
+			//
+			// "//host/x.png" is included: it currently resolves onto our own host
+			// rather than off-site, but it is written as an absolute reference and
+			// the rule is easier to trust when it has no exceptions.
+			return null;
 		}
 
 		String base = baseUrl == null ? "" : baseUrl.trim();

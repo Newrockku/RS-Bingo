@@ -40,6 +40,9 @@ class RsBingoPanel extends PluginPanel
 
 	private final RsBingoApi api;
 	private final RsBingoConfig config;
+
+	/** Hardcoded in the client; see the constructor. */
+	private final String siteUrl;
 	private final Runnable onEventCodeChanged;
 	private final Consumer<String> onTeamSelected;
 	private final Consumer<BoardModels.Theme> onThemeSelected;
@@ -112,7 +115,12 @@ class RsBingoPanel extends PluginPanel
 	 */
 	private Integer openTilePos;
 
-	RsBingoPanel(RsBingoApi api, TileImageCache images, RsBingoConfig config,
+	/**
+	 * @param siteUrl the address every request goes to. Always
+	 *                {@link RsBingoConfig#SITE_URL} in the client; a parameter only so
+	 *                the preview harness can render against a local copy of the site.
+	 */
+	RsBingoPanel(RsBingoApi api, TileImageCache images, RsBingoConfig config, String siteUrl,
 				 Runnable onEventCodeChanged, Consumer<String> onTeamSelected,
 				 Consumer<BoardModels.Theme> onThemeSelected, Consumer<String> onEventSelected,
 				 ScreenshotSource screenshots)
@@ -121,6 +129,7 @@ class RsBingoPanel extends PluginPanel
 		this.api = api;
 		this.images = images;
 		this.config = config;
+		this.siteUrl = siteUrl;
 		this.onEventCodeChanged = onEventCodeChanged;
 		this.onTeamSelected = onTeamSelected;
 		this.onThemeSelected = onThemeSelected;
@@ -267,7 +276,7 @@ class RsBingoPanel extends PluginPanel
 			boardCard.add(c);
 		}
 
-		detail = new TileDetailPanel(images, config, submitter, this::closeTile);
+		detail = new TileDetailPanel(images, config, siteUrl, submitter, this::closeTile);
 		detailScroll = scrolling(detail);
 
 		deck = new JPanel(cards);
@@ -347,7 +356,7 @@ class RsBingoPanel extends PluginPanel
 				}
 
 				SwingUtilities.invokeLater(() -> onStatus.accept("Uploading…"));
-				api.submitItem(config.baseUrl(), current.eventId,
+				api.submitItem(siteUrl, current.eventId,
 					current.team, as, tile.pos, tile.id, option, png,
 					() -> SwingUtilities.invokeLater(() ->
 					{
@@ -759,7 +768,7 @@ class RsBingoPanel extends PluginPanel
 			grid.setLayout(new GridLayout(0, cols, CELL_GAP, CELL_GAP));
 			for (BoardModels.BoardTile tile : board.board)
 			{
-				grid.add(new TileCell(tile, board, images, config, cell,
+				grid.add(new TileCell(tile, board, images, config, siteUrl, cell,
 					() -> openTile(tile, board)));
 			}
 			grid.revalidate();
@@ -831,7 +840,7 @@ class RsBingoPanel extends PluginPanel
 		setStatus("Loading " + team + "…");
 		// Ask for the open tile's player breakdown in the same request. The server
 		// only sends it for this one tile, which is what keeps the response small.
-		api.fetchBoard(config.baseUrl(), code, team, openTilePos == null ? 0 : openTilePos,
+		api.fetchBoard(siteUrl, code, team, openTilePos == null ? 0 : openTilePos,
 			this::showBoard, this::setStatus);
 	}
 

@@ -9,7 +9,12 @@ public interface RsBingoConfig extends Config
 {
 	String GROUP = "rsbingo";
 
-	/** The live site. Not a setting: every install talks to the same place. */
+	/**
+	 * The one address this plugin ever contacts. Deliberately a constant and not a
+	 * setting: a plugin may only talk to addresses that are hardcoded or typed by
+	 * the user, so there is nothing here for a config value — or a server response —
+	 * to redirect.
+	 */
 	String SITE_URL = "https://rs-bingo.com";
 
 	@ConfigItem(
@@ -21,25 +26,6 @@ public interface RsBingoConfig extends Config
 	default String eventCode()
 	{
 		return "";
-	}
-
-	/**
-	 * Where the event lives. Hidden rather than removed: the plugin still reads it,
-	 * which is what lets the preview harness point at a local copy, but there is no
-	 * reason for a player to change it and every reason for a typo here to look like
-	 * the plugin being broken. RsBingoPlugin resets anything that isn't SITE_URL on
-	 * startup, so a value left over from testing cannot silently persist.
-	 */
-	@ConfigItem(
-		keyName = "baseUrl",
-		name = "Site URL",
-		description = "Where the event lives.",
-		hidden = true,
-		position = 2
-	)
-	default String baseUrl()
-	{
-		return SITE_URL;
 	}
 
 	@ConfigItem(

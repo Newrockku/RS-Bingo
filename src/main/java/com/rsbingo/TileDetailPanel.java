@@ -51,6 +51,7 @@ class TileDetailPanel extends JPanel
 
 	private final TileImageCache images;
 	private final RsBingoConfig config;
+	private final String siteUrl;
 	private final Submitter submitter;
 
 	/**
@@ -103,10 +104,12 @@ class TileDetailPanel extends JPanel
 	private final JPanel xpWell = Brand.well();
 	private final JPanel checklistWell = Brand.well();
 
-	TileDetailPanel(TileImageCache images, RsBingoConfig config, Submitter submitter, Runnable onBack)
+	TileDetailPanel(TileImageCache images, RsBingoConfig config, String siteUrl,
+					Submitter submitter, Runnable onBack)
 	{
 		this.images = images;
 		this.config = config;
+		this.siteUrl = siteUrl;
 		this.submitter = submitter;
 
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -306,7 +309,7 @@ class TileDetailPanel extends JPanel
 
 		imageLabel.setIcon(null);
 		final String url = config.showTileImages()
-			? TileImageCache.resolve(config.baseUrl(), tile.img)
+			? TileImageCache.resolve(siteUrl, tile.img)
 			: null;
 		if (url != null)
 		{

@@ -69,12 +69,6 @@ public class PanelPreview
 			}
 
 			@Override
-			public String baseUrl()
-			{
-				return url;
-			}
-
-			@Override
 			public int refreshSeconds()
 			{
 				return 0;
@@ -122,8 +116,10 @@ public class PanelPreview
 		}
 
 		final RsBingoPanel[] holder = new RsBingoPanel[1];
+		// The client always passes RsBingoConfig.SITE_URL here; this harness is the one
+		// caller that passes anything else, so a local copy of the site can be rendered.
 		SwingUtilities.invokeAndWait(() -> holder[0] = new RsBingoPanel(
-			api, images, config, () -> { }, t -> { }, t -> { }, e -> { }, onFrame -> { }));
+			api, images, config, url, () -> { }, t -> { }, t -> { }, e -> { }, onFrame -> { }));
 		final RsBingoPanel panel = holder[0];
 
 		// There is no game client here, so the logged-in character has to be supplied
