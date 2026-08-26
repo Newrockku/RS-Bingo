@@ -3,6 +3,10 @@ package com.rsbingo;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
+import java.net.SocketTimeoutException;
+import javax.net.ssl.SSLException;
 import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -78,7 +82,7 @@ public class RsBingoApi
 			public void onFailure(Call call, IOException e)
 			{
 				log.debug("rs-bingo board fetch failed", e);
-				onError.accept("Could not reach the site.");
+				onError.accept(describe(e));
 			}
 
 			@Override
@@ -187,7 +191,7 @@ public class RsBingoApi
 			public void onFailure(Call call, IOException e)
 			{
 				log.debug("rs-bingo event list failed", e);
-				onError.accept("Could not reach the site.");
+				onError.accept(describe(e));
 			}
 
 			@Override
@@ -263,7 +267,7 @@ public class RsBingoApi
 			public void onFailure(Call call, IOException e)
 			{
 				log.debug("rs-bingo submission failed", e);
-				onError.accept("Could not reach the site.");
+				onError.accept(describe(e));
 			}
 
 			@Override
@@ -325,6 +329,40 @@ public class RsBingoApi
 		boolean success;
 		String message;
 		String error;
+	}
+
+	/**
+	 * Turn a transport failure into something a player can act on.
+	 *
+	 * Every one of these used to read "Could not reach the site", which is true but
+	 * useless: a machine that cannot resolve the name, one behind a captive portal
+	 * and one with a broken clock rejecting the certificate all looked identical,
+	 * and the only way to tell them apart was to reproduce it yourself.
+	 */
+	private static String describe(IOException e)
+	{
+		final String host = HttpUrl.parse(RsBingoConfig.SITE_URL) != null
+			? HttpUrl.parse(RsBingoConfig.SITE_URL).host()
+			: RsBingoConfig.SITE_URL;
+
+		if (e instanceof UnknownHostException)
+		{
+			return "Can't find " + host + ". Check your internet connection or DNS.";
+		}
+		if (e instanceof SocketTimeoutException)
+		{
+			return host + " timed out. It may be down, or your connection is blocking it.";
+		}
+		if (e instanceof SSLException)
+		{
+			return "Secure connection to " + host + " failed. Check your system clock, "
+				+ "or whether a firewall or VPN is inspecting traffic.";
+		}
+		if (e instanceof ConnectException)
+		{
+			return "Connection to " + host + " was refused.";
+		}
+		return "Could not reach " + host + ".";
 	}
 
 	private String messageFor(int code, String body)
