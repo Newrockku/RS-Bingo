@@ -10,6 +10,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JTextArea;
 import javax.swing.text.DefaultCaret;
@@ -235,6 +236,57 @@ final class Brand
 		p.setBorder(BorderFactory.createEmptyBorder(6, PAD + 2, 6, PAD + 2));
 		p.setAlignmentX(Component.LEFT_ALIGNMENT);
 		return p;
+	}
+
+	/**
+	 * A button drawn the way {@link #well()} draws a panel: same corner radius, same
+	 * fill, so a control and a section read as parts of one surface rather than a
+	 * rounded box with a square button sitting on it.
+	 *
+	 * Swing will not round a JButton for us. The look-and-feel is told to fill
+	 * nothing ({@code setContentAreaFilled(false)}) and the component is not opaque,
+	 * so the only thing painting a background is the rounded rectangle below;
+	 * {@code super.paintComponent} then draws the label over it.
+	 *
+	 * Colours are read at paint time, not captured here, so a theme change applies
+	 * without rebuilding the button.
+	 */
+	static JButton button(String text, Color foreground)
+	{
+		final JButton b = new JButton(text)
+		{
+			@Override
+			protected void paintComponent(Graphics graphics)
+			{
+				final Graphics2D g = (Graphics2D) graphics.create();
+				try
+				{
+					g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+					// Pressed lifts to the tile colour: without it nothing on screen
+					// acknowledges the click until the panel has already changed.
+					g.setColor(getModel().isPressed() ? BG_TILE : BG_WELL);
+					g.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS, RADIUS);
+
+					// A disabled button keeps the shape but drops out of the accent,
+					// so "nothing left to submit" doesn't look like something to press.
+					g.setColor(isEnabled() ? ACCENT : BORDER);
+					g.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS, RADIUS);
+				}
+				finally
+				{
+					g.dispose();
+				}
+				super.paintComponent(graphics);
+			}
+		};
+
+		b.setFocusPainted(false);
+		b.setContentAreaFilled(false);
+		b.setOpaque(false);
+		b.setForeground(foreground);
+		b.setBorder(BorderFactory.createEmptyBorder(7, 8, 7, 8));
+		return b;
 	}
 
 	/** A small gold-outlined pill, for the points count and tag chips. */

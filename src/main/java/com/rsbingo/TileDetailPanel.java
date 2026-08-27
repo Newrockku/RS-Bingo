@@ -93,7 +93,7 @@ class TileDetailPanel extends JPanel
 	private final JLabel submitHeading = Brand.sectionLabel("Submit");
 	private final JPanel submitWell = Brand.well();
 	private final JComboBox<BoardModels.SubmitOption> submitBox = new JComboBox<>();
-	private final JButton submitButton = new JButton("Take screenshot & submit");
+	private final JButton submitButton = Brand.button("Take screenshot & submit", Brand.ACCENT);
 	private final JLabel submitAs = new JLabel();
 	/** Breathing room so the button doesn't sit flush against the picker. */
 	private final JPanel submitGap = spacer(6);
@@ -116,19 +116,13 @@ class TileDetailPanel extends JPanel
 		setBackground(Brand.BG_TILE);
 		setBorder(BorderFactory.createEmptyBorder(6, Brand.PAD, 10, Brand.PAD));
 
-		final JButton back = new JButton("< Back to board");
-		back.setFocusPainted(false);
-		// The Windows look-and-feel paints its own button face and ignores
-		// setBackground; unfilling the content area lets ours show through.
-		back.setContentAreaFilled(false);
-		back.setOpaque(true);
-		back.setBackground(Brand.BG_WELL);
-		back.setForeground(Brand.TEXT_MAIN);
-		back.setFont(FontManager.getRunescapeSmallFont());
-		back.setBorder(BorderFactory.createCompoundBorder(
-			BorderFactory.createLineBorder(Brand.BORDER),
-			BorderFactory.createEmptyBorder(4, 6, 4, 6)));
-		back.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
+		// Outlined in the accent rather than the border colour: this is the only way
+		// out of a tile, and against BG_WELL a border-coloured outline is nearly the
+		// same value as the panel behind it, so the control read as a caption strip
+		// rather than something to press.
+		final JButton back = Brand.button("< Back to board", Brand.TEXT_BRIGHT);
+		back.setFont(Brand.bold(14f));
+		back.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
 		back.addActionListener(e -> onBack.run());
 
 		// The artwork is the tile's identity — the site centres it and gives it room.
@@ -169,6 +163,9 @@ class TileDetailPanel extends JPanel
 		checklistWell.add(checklist);
 
 		add(back);
+		// The title sat directly against the button, which made the two read as one
+		// block instead of a control and a heading.
+		add(Box.createVerticalStrut(12));
 		add(title);
 		add(Brand.centered(imageLabel));
 		add(Brand.centered(status));
@@ -194,16 +191,8 @@ class TileDetailPanel extends JPanel
 		submitBox.setForeground(Brand.TEXT_BRIGHT);
 		submitBox.setFont(FontManager.getRunescapeSmallFont());
 
-		submitButton.setFocusPainted(false);
-		submitButton.setContentAreaFilled(false);
-		submitButton.setOpaque(true);
-		submitButton.setBackground(Brand.BG_WELL);
-		submitButton.setForeground(Brand.ACCENT);
 		submitButton.setFont(FontManager.getRunescapeSmallFont());
-		submitButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
-		submitButton.setBorder(BorderFactory.createCompoundBorder(
-			BorderFactory.createLineBorder(Brand.BORDER),
-			BorderFactory.createEmptyBorder(4, 6, 4, 6)));
+		submitButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
 		submitButton.addActionListener(e -> onSubmitClicked());
 
 		for (Component c : new Component[]{submitAs, submitBox, submitGap, submitButton, submitStatus})
