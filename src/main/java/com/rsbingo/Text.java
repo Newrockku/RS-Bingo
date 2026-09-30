@@ -75,6 +75,28 @@ final class Text
 	}
 
 	/** Two units at most: "2d 14h", "3h 20m", "12m", "<1m". */
+	/**
+	 * How long until an ISO 8601 instant, or null when there is none, it cannot be
+	 * read, or it has already passed — in which case the caller has nothing to count
+	 * down to and should say something else.
+	 */
+	static String untilRelease(String iso, java.time.Instant now)
+	{
+		if (iso == null || iso.trim().isEmpty())
+		{
+			return null;
+		}
+		try
+		{
+			final long millis = java.time.Instant.parse(iso.trim()).toEpochMilli() - now.toEpochMilli();
+			return millis > 0 ? duration(millis) : null;
+		}
+		catch (java.time.format.DateTimeParseException e)
+		{
+			return null;
+		}
+	}
+
 	static String duration(long millis)
 	{
 		if (millis < 60_000)

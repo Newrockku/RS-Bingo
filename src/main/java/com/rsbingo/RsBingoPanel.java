@@ -266,6 +266,9 @@ class RsBingoPanel extends PluginPanel
 	 */
 	private final JLabel codewordLabel = new JLabel();
 
+	/** Says why a board has no tiles on it, when that is deliberate. */
+	private final JLabel hiddenNotice = new JLabel();
+
 	/**
 	 * Everything below is rebuilt by {@link #buildUi()} on a theme change: these
 	 * components bake the palette in when they are created, so they are recreated
@@ -445,11 +448,16 @@ class RsBingoPanel extends PluginPanel
 		codewordLabel.setForeground(Brand.ACCENT);
 		codewordLabel.setBorder(BorderFactory.createEmptyBorder(2, 0, 8, 0));
 
+		hiddenNotice.setFont(FontManager.getRunescapeSmallFont());
+		hiddenNotice.setForeground(Brand.TEXT_DIM);
+		hiddenNotice.setBorder(BorderFactory.createEmptyBorder(2, 0, 6, 0));
+
 		// BoxLayout lays children out around a shared alignment axis, so a mix of
 		// LEFT and the JComponent default (CENTRE) makes it reserve space on both
 		// sides and squeeze components. They all have to agree.
 		for (JComponent c : new JComponent[]{eventHeading, eventBox, themeHeading, themeBox,
-			teamLabel, teamBox, headerLabel, statusLabel, countdown, codewordLabel})
+			teamLabel, teamBox, headerLabel, statusLabel, countdown, codewordLabel,
+			hiddenNotice})
 		{
 			c.setAlignmentX(LEFT_ALIGNMENT);
 			controls.add(c);
@@ -605,10 +613,24 @@ class RsBingoPanel extends PluginPanel
 			revalidate();
 			repaint();
 
-			if (showing != null)
+			if (showing == null)
 			{
-				showBoard(showing);
+				return;
 			}
+
+			// A board with no team is the event summary: teams and standings, no
+			// tiles. Redrawing that through showBoard paints an empty grid and
+			// "0/0 tiles" over whatever was there. It happens on first open, where
+			// the themes arrive between the summary and the team's board, and it
+			// used to stick, because the refresh timer had no team to re-fetch.
+			// Going back through showEvent picks a team and asks for its board.
+			if (showing.team == null)
+			{
+				showEvent(showing);
+				return;
+			}
+
+			showBoard(showing);
 		});
 	}
 
@@ -885,6 +907,31 @@ class RsBingoPanel extends PluginPanel
 		final boolean hasCodeword = board.codeword != null && !board.codeword.trim().isEmpty();
 		codewordLabel.setVisible(hasCodeword);
 		codewordLabel.setText(hasCodeword ? ("Codeword: " + board.codeword.trim()) : "");
+
+		applyHiddenNotice(board);
+	}
+
+	/**
+	 * Says a blank board is blank on purpose.
+	 *
+	 * An event can withhold tile names, artwork and checklists until shortly before
+	 * it starts. Left unexplained that looks exactly like a board that failed to
+	 * load, which is how it was first reported.
+	 */
+	private void applyHiddenNotice(BoardModels.Board board)
+	{
+		if (!board.hiddenTiles)
+		{
+			hiddenNotice.setVisible(false);
+			hiddenNotice.setText("");
+			return;
+		}
+
+		final String when = Text.untilRelease(board.tilesReleaseAt, java.time.Instant.now());
+		hiddenNotice.setVisible(true);
+		hiddenNotice.setText(when == null
+			? "Tiles hidden by the organiser"
+			: ("Tiles hidden - revealed in " + when));
 	}
 
 	private static BoardModels.TeamSummary teamNamed(BoardModels.Board board, String name)
@@ -1194,11 +1241,26 @@ class RsBingoPanel extends PluginPanel
 	/** Re-fetch the team currently selected, if any. Used by the refresh timer. */
 	void refreshCurrentTeam()
 	{
-		if (current == null || current.team == null)
+		if (current == null)
 		{
 			return;
 		}
-		loadTeam(current.team);
+
+		// Falls back to the dropdown when what is loaded is the event summary, which
+		// carries no team. Without this the timer gave up on exactly the state it
+		// most needed to repair, and the panel sat empty until a team was picked by
+		// hand.
+		String team = current.team;
+		if (team == null)
+		{
+			final BoardModels.TeamSummary selected = (BoardModels.TeamSummary) teamBox.getSelectedItem();
+			team = selected == null ? null : selected.name;
+		}
+
+		if (team != null && !team.isEmpty())
+		{
+			loadTeam(team);
+		}
 	}
 
 	void clearBoard()

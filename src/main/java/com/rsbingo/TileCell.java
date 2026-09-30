@@ -35,6 +35,9 @@ class TileCell extends JPanel
 
 	private final BoardModels.BoardTile tile;
 	private final boolean showdown;
+
+	/** Tile details withheld by the event; drawn as a lock, opens nothing. */
+	private final boolean locked;
 	/** Kept so the tooltip can ask what this tile's counts are measured in — a Hybrid
 	 *  board answers that per tile, not per board. */
 	private final BoardModels.Board board;
@@ -55,6 +58,7 @@ class TileCell extends JPanel
 		this.tile = tile;
 		this.board = board;
 		this.showdown = board.isShowdown();
+		this.locked = board.hiddenTiles && !tile.empty;
 
 		setPreferredSize(new Dimension(size, size));
 		setOpaque(false);
@@ -76,6 +80,14 @@ class TileCell extends JPanel
 				this.image = img;
 				repaint();
 			});
+		}
+
+		// A withheld tile opens nothing. The server sends no name, artwork or
+		// checklist for one, so the detail view would be an empty panel — and the
+		// website refuses the same click rather than showing it.
+		if (locked)
+		{
+			return;
 		}
 
 		setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -117,6 +129,17 @@ class TileCell extends JPanel
 			{
 				g.setColor(Brand.BORDER.darker());
 				g.drawRoundRect(0, 0, w - 1, h - 1, RADIUS, RADIUS);
+				return;
+			}
+
+			// Withheld: a lock and nothing else. The points badge is deliberately left
+			// off — the site replaces the whole cell with its padlock, so showing what
+			// a tile is worth here would give away more than the website does.
+			if (locked)
+			{
+				g.setColor(Brand.BORDER);
+				g.drawRoundRect(0, 0, w - 1, h - 1, RADIUS, RADIUS);
+				paintLock(g, w, h);
 				return;
 			}
 
@@ -285,6 +308,60 @@ class TileCell extends JPanel
 	}
 
 	/**
+	 * A padlock, centred.
+	 *
+	 * Proportions matter more than detail at this size: a 7x7 board gives each cell
+	 * about 26px. Two things decide whether it reads as a lock — the shackle is
+	 * clearly narrower than the body, and it is a true semicircle on short stems.
+	 * Drawn from a bounding box taller than it is wide, the arc comes out as a
+	 * pointed arch and the whole thing looks like a handbag.
+	 */
+	private static void paintLock(Graphics2D g, int w, int h)
+	{
+		final int min = Math.min(w, h);
+
+		final int bodyW = Math.max(7, Math.round(min * 0.44f));
+		final int bodyH = Math.max(5, Math.round(min * 0.30f));
+		final int stem = Math.max(1, Math.round(min * 0.06f));
+
+		// Widths are kept the same parity so that halving the difference is exact.
+		// Centring the two independently leaves the shackle half a pixel off the
+		// body whenever the cell width makes their parities differ, which at 26px is
+		// plainly visible as a lopsided lock.
+		int shackleW = Math.max(4, Math.round(bodyW * 0.62f));
+		if (((bodyW - shackleW) & 1) != 0)
+		{
+			shackleW++;
+		}
+
+		// Semicircle: a bounding box as tall as it is wide, swept 0-180, is a half
+		// circle of height shackleW/2.
+		final int arcH = shackleW;
+		final int shackleTotal = (arcH / 2) + stem;
+
+		final int totalH = bodyH + shackleTotal;
+		final int bodyY = (h - totalH) / 2 + shackleTotal;
+		final int bodyX = (w - bodyW) / 2;
+		// Derived from the body, not from the cell, so the two always share a centre.
+		final int shackleX = bodyX + ((bodyW - shackleW) / 2);
+		final int arcTop = bodyY - shackleTotal;
+
+		g.setColor(Brand.TEXT_DIM);
+
+		final java.awt.Stroke previous = g.getStroke();
+		g.setStroke(new java.awt.BasicStroke(Math.max(1f, min / 16f),
+			java.awt.BasicStroke.CAP_BUTT, java.awt.BasicStroke.JOIN_MITER));
+		g.drawArc(shackleX, arcTop, shackleW, arcH, 0, 180);
+		// Stems from the arc's ends down onto the body.
+		final int stemTop = arcTop + arcH / 2;
+		g.drawLine(shackleX, stemTop, shackleX, bodyY);
+		g.drawLine(shackleX + shackleW, stemTop, shackleX + shackleW, bodyY);
+		g.setStroke(previous);
+
+		g.fillRoundRect(bodyX, bodyY, bodyW, bodyH, 2, 2);
+	}
+
+	/**
 	 * The diagonal tint a tile carries as it climbs its tiers, so a finished tile is
 	 * lit rather than merely outlined and a Showdown board's spread is readable
 	 * without checking a single badge.
@@ -347,6 +424,17 @@ class TileCell extends JPanel
 
 		final StringBuilder tip = new StringBuilder("<html><b>")
 			.append(Text.escape(tile.displayTitle())).append("</b>");
+
+		if (locked)
+		{
+			tip.append("<br>Hidden until the organiser releases the board");
+			final String when = Text.untilRelease(board.tilesReleaseAt, java.time.Instant.now());
+			if (when != null)
+			{
+				tip.append("<br>Revealed in ").append(when);
+			}
+			return tip.append("</html>").toString();
+		}
 
 		if (showdown && tile.tier != null)
 		{

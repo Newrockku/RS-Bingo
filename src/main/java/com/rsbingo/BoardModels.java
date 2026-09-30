@@ -78,6 +78,12 @@ public class BoardModels
 		public List<BoardTile> board = new ArrayList<>();
 		public boolean hiddenTiles;
 
+		/**
+		 * When withheld tiles become visible, ISO 8601. Null when the organiser set
+		 * no release time, in which case they stay hidden until the setting changes.
+		 */
+		public String tilesReleaseAt;
+
 		/** How the viewed team's total was arrived at. Null until a team is chosen. */
 		public Points points;
 
