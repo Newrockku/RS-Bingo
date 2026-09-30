@@ -32,17 +32,28 @@ import okhttp3.Response;
  * The board re-renders on every refresh and every card switch, so the two things
  * that matter here are that a repaint never triggers a second fetch of the same
  * image, and that a board full of art can't grow without bound. Images are scaled
- * down at decode time — nothing draws them larger than a panel cell — which caps
- * a full 200-entry cache at roughly 7MB rather than the tens of megabytes the
- * originals would take.
+ * down at decode time to the largest size anything draws them at, which caps a
+ * full cache near 15MB rather than the hundreds of megabytes the originals would
+ * take.
  */
 @Slf4j
 @Singleton
 class TileImageCache
 {
-	/** Nothing is drawn bigger than this, so nothing is kept bigger than this. */
-	private static final int MAX_DIM = 96;
-	private static final int MAX_ENTRIES = 200;
+	/**
+	 * Nothing is drawn bigger than this, so nothing is kept bigger than this. Sized
+	 * for the largest consumer, which is the tile detail view's 165x110 box — not the
+	 * ~50px board cell. At 96 the detail view was handed art already reduced past the
+	 * size it needed and had no way to get it back.
+	 */
+	private static final int MAX_DIM = 176;
+
+	/**
+	 * Lowered as MAX_DIM rose to keep the worst case in the same territory: 176px
+	 * ARGB is roughly 124KB an entry, so this caps the cache near 15MB for a board
+	 * with more distinct pictures than any real one has.
+	 */
+	private static final int MAX_ENTRIES = 120;
 
 	/** Access-ordered LRU. Synchronized: fetches complete on OkHttp's threads. */
 	private final Map<String, BufferedImage> cache = Collections.synchronizedMap(

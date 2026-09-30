@@ -1,0 +1,197 @@
+{
+    "eventId": "HYBPLUG",
+    "name": "Hybrid Plugin Test",
+    "format": "Hybrid",
+    "cols": 2,
+    "rows": 2,
+    "numTiers": 0,
+    "startDate": "2026-01-01T00:00:00Z",
+    "endDate": "2027-01-01T00:00:00Z",
+    "teams": [
+        {
+            "name": "Alpha",
+            "points": 120,
+            "players": [
+                "Ayla"
+            ]
+        }
+    ],
+    "codeword": "hybrid",
+    "team": "Alpha",
+    "board": [
+        {
+            "pos": 1,
+            "id": 1,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Drops",
+            "description": "",
+            "img": "",
+            "points": 50,
+            "goal": 2,
+            "done": false,
+            "collected": 1,
+            "required": 2,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Dragon Warhammer",
+                    "need": 1,
+                    "approved": 1,
+                    "player": "Ayla",
+                    "pending": 0
+                },
+                {
+                    "label": "Elder Maul",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Dragon Warhammer",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": true,
+                    "pending": false
+                },
+                {
+                    "label": "Elder Maul",
+                    "type": "individual",
+                    "index": 1,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 2,
+            "id": 2,
+            "tileType": "showdown",
+            "region": "",
+            "title": "Zulrah",
+            "description": "",
+            "img": "",
+            "points": 120,
+            "goal": 1,
+            "done": true,
+            "collected": 600,
+            "required": 500,
+            "tags": [],
+            "items": [],
+            "groups": [],
+            "submitItems": [],
+            "score": 600,
+            "tierThreshold": 500,
+            "rates": [
+                {
+                    "label": "Boss: Zulrah",
+                    "rate": "1 pts/KC"
+                }
+            ]
+        },
+        {
+            "pos": 3,
+            "id": 3,
+            "tileType": "showdown",
+            "region": "",
+            "title": "Pet Hunt",
+            "description": "",
+            "img": "",
+            "points": 80,
+            "goal": 1,
+            "done": false,
+            "collected": 60,
+            "required": 100,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Pet Snakeling",
+                    "need": 1,
+                    "approved": 1,
+                    "player": "Ayla",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Pet Snakeling",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": true,
+                    "pending": false
+                }
+            ],
+            "score": 60,
+            "tierThreshold": 100,
+            "rates": [
+                {
+                    "label": "Pet Snakeling",
+                    "rate": "60 pts/item"
+                }
+            ]
+        },
+        {
+            "pos": 4,
+            "id": 4,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Mining",
+            "description": "",
+            "img": "",
+            "points": 30,
+            "goal": 100000,
+            "done": false,
+            "collected": 50000,
+            "required": 100000,
+            "tags": [
+                "XP"
+            ],
+            "items": [],
+            "groups": [],
+            "submitItems": [],
+            "xp": {
+                "skill": "mining",
+                "collected": 50000,
+                "required": 100000,
+                "players": [
+                    {
+                        "name": "Ayla",
+                        "xp": 50000
+                    }
+                ]
+            }
+        }
+    ],
+    "hiddenTiles": false,
+    "points": {
+        "isShowdown": false,
+        "tilePts": 120,
+        "rowPts": 0,
+        "colPts": 0,
+        "diagPts": 0,
+        "clogPts": 0,
+        "rows": 0,
+        "cols": 0,
+        "diags": 0,
+        "tiles": [
+            {
+                "label": "Zulrah",
+                "pts": 120
+            }
+        ],
+        "flatPts": 0,
+        "roguelite": null,
+        "total": 120
+    }
+}

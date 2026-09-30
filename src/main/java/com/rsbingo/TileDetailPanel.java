@@ -75,6 +75,15 @@ class TileDetailPanel extends JPanel
 	private final JLabel meta = new JLabel();
 	private final Brand.ProgressBar progress = new Brand.ProgressBar();
 	private final JLabel tierLine = new JLabel();
+
+	/**
+	 * The named board area this tile belongs to, with a swatch in that region's
+	 * colour. Without the name the outline on the board is just a colour; without the
+	 * swatch the name does not tie to the outline the player is looking at.
+	 */
+	private final JPanel regionSwatch = new JPanel();
+	private final JLabel regionLabel = new JLabel();
+	private final JPanel regionRow = new JPanel();
 	private final JTextArea description;
 	private final JPanel checklist = Brand.section();
 
@@ -170,6 +179,18 @@ class TileDetailPanel extends JPanel
 		add(Brand.centered(imageLabel));
 		add(Brand.centered(status));
 		add(Brand.centered(meta));
+
+		regionRow.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 6, 0));
+		regionRow.setOpaque(false);
+		regionSwatch.setPreferredSize(new Dimension(9, 9));
+		regionSwatch.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0, 140)));
+		regionLabel.setFont(FontManager.getRunescapeSmallFont());
+		regionLabel.setForeground(Brand.TEXT_DIM);
+		regionRow.add(regionSwatch);
+		regionRow.add(regionLabel);
+		regionRow.setVisible(false);
+		add(Brand.centered(regionRow));
+
 		add(Box.createVerticalStrut(8));
 		add(progress);
 		add(tierLine);
@@ -288,7 +309,13 @@ class TileDetailPanel extends JPanel
 
 	void show(BoardModels.BoardTile tile, BoardModels.Board board)
 	{
+		// Two different questions, and conflating them is what broke Hybrid tiles.
+		// `showdown` means "this board climbs tiers", which drives the tier badge and
+		// the tier line. `showdownScored` means "this tile is judged on a score rather
+		// than a checklist", which a Hybrid board answers per tile — those tiles have
+		// no tiers but their progress is still counted in points, not items.
 		final boolean showdown = board.isShowdown();
+		final boolean showdownScored = tile.scoredByShowdownRules(board);
 
 		// Header: the site writes "3 | Prison Break", dropping the position on
 		// Showdown tiles where the tier matters more than the square.
@@ -317,20 +344,34 @@ class TileDetailPanel extends JPanel
 			status.setForeground(tile.done ? Brand.COMPLETED : Brand.TEXT_DIM);
 		}
 
-		final StringBuilder m = new StringBuilder();
-		m.append(tile.points).append(" PTS");
-		if (tile.xp == null && (tile.hasCounts() || tile.neededCount() > 0))
+		// A Showdown tile scores by tier, not by a flat value or a checklist, so it
+		// gets neither figure: the tile's "points" field is not what it pays, and the
+		// item count is not what it is judged on. Printing "10 PTS · 0/1 items" under
+		// "Tier 4 of 5" described a tile that does not exist. The tier line below
+		// carries what actually matters.
+		// A Hybrid showdown tile keeps this line: unlike a Showdown tile it does pay a
+		// flat value, so "120 PTS" is the truth. What it must not claim is a count of
+		// items — its collected/required are points toward a threshold, and printing
+		// "600/500 items" described a tile needing six hundred drops.
+		meta.setVisible(!showdown);
+		if (!showdown)
 		{
-			m.append("  ·  ").append(tile.progressText()).append(" items");
+			final StringBuilder m = new StringBuilder();
+			m.append(tile.points).append(" PTS");
+			if (tile.xp == null && !showdownScored && (tile.hasCounts() || tile.neededCount() > 0))
+			{
+				m.append("  ·  ").append(tile.progressTextWithUnit(board));
+			}
+			meta.setText(m.toString());
 		}
-		meta.setText(m.toString());
 
 		// Tags are deliberately not shown: they name the same bosses and skills that
 		// Point Rates lists with their values attached, and on a 225px panel the
 		// duplicate list cost several lines without adding anything.
 		final boolean hasRates = !tile.rates.isEmpty();
 
-		applyProgress(tile, showdown);
+		applyRegion(tile, board);
+		applyProgress(tile, showdown, showdownScored, board);
 
 		final boolean hasDescription = tile.description != null && !tile.description.isEmpty();
 		descriptionHeading.setVisible(hasDescription);
@@ -354,8 +395,52 @@ class TileDetailPanel extends JPanel
 		repaint();
 	}
 
-	private void applyProgress(BoardModels.BoardTile tile, boolean showdown)
+	/**
+	 * Name the area this tile sits in, in that area's own colour.
+	 *
+	 * The index comes from the board's region list rather than from anything derived
+	 * here — that list is ordered by the event's tile definitions, which is what makes
+	 * the swatch match the outline the website draws around the same tiles.
+	 */
+	private void applyRegion(BoardModels.BoardTile tile, BoardModels.Board board)
 	{
+		final int idx = board.regionIndex(tile.region);
+		if (idx < 0)
+		{
+			regionRow.setVisible(false);
+			return;
+		}
+		regionRow.setVisible(true);
+		regionSwatch.setBackground(Brand.regionColor(idx));
+		regionLabel.setText("Region: " + tile.region);
+		regionLabel.setForeground(Brand.TEXT_DIM);
+	}
+
+	private void applyProgress(BoardModels.BoardTile tile, boolean showdown,
+		boolean showdownScored, BoardModels.Board board)
+	{
+		// A Hybrid showdown tile: one threshold, no ladder. It still deserves the score
+		// line — the bar alone does not say what the numbers are — but worded for
+		// completion rather than for a next tier it can never reach.
+		if (!showdown && showdownScored)
+		{
+			progress.setVisible(true);
+			tierLine.setVisible(true);
+			progress.setProgress(tile.itemsPercent(), tile.done);
+
+			final String have = tile.hasTierProgress()
+				? Text.compact(tile.score)
+				: Text.compact(tile.collected == null ? 0 : tile.collected);
+			final String need = tile.hasTierProgress()
+				? Text.compact(tile.tierThreshold)
+				: Text.compact(tile.required == null ? 0 : tile.required);
+
+			tierLine.setText(tile.done
+				? have + " / " + need + " pts - complete"
+				: String.format("%s / %s pts - %.1f%% complete", have, need, tile.itemsPercent()));
+			return;
+		}
+
 		if (showdown && tile.hasTierProgress())
 		{
 			progress.setVisible(true);
@@ -663,10 +748,18 @@ class TileDetailPanel extends JPanel
 		pane.setSize(Brand.CONTENT_WIDTH, Short.MAX_VALUE);
 	}
 
+	/**
+	 * Scales art to fill the detail view's box, up as well as down.
+	 *
+	 * This used to return anything already small enough untouched, which meant a
+	 * 56px icon sat at 56px beside a 165px one and the header looked ragged from
+	 * tile to tile. The aspect ratio is kept, so "fill" means the longer side meets
+	 * the box; nothing is cropped or stretched.
+	 */
 	private static BufferedImage fit(BufferedImage src, int maxW, int maxH)
 	{
 		final double scale = Math.min(maxW / (double) src.getWidth(), maxH / (double) src.getHeight());
-		if (scale >= 1)
+		if (scale == 1)
 		{
 			return src;
 		}

@@ -1,0 +1,927 @@
+{
+    "eventId": "RGPLUG",
+    "name": "Region Plugin Test",
+    "format": "Hybrid",
+    "cols": 5,
+    "rows": 5,
+    "numTiers": 0,
+    "regions": [
+        "Varrock",
+        "Wilderness",
+        "Zanaris"
+    ],
+    "startDate": "2026-01-01T00:00:00Z",
+    "endDate": "2027-01-01T00:00:00Z",
+    "teams": [
+        {
+            "name": "Alpha",
+            "points": 110,
+            "players": [
+                "Ayla"
+            ]
+        }
+    ],
+    "codeword": "rg",
+    "team": "Alpha",
+    "board": [
+        {
+            "pos": 1,
+            "id": 1,
+            "tileType": "blackout",
+            "region": "Varrock",
+            "title": "Tile 1",
+            "description": "",
+            "img": "",
+            "points": 20,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 1",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 1",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 2,
+            "id": 2,
+            "tileType": "showdown",
+            "region": "Varrock",
+            "title": "Tile 2",
+            "description": "",
+            "img": "",
+            "points": 30,
+            "goal": 1,
+            "done": true,
+            "collected": 600,
+            "required": 500,
+            "tags": [],
+            "items": [],
+            "groups": [],
+            "submitItems": [],
+            "score": 600,
+            "tierThreshold": 500,
+            "rates": [
+                {
+                    "label": "Boss: Zulrah",
+                    "rate": "1 pts/KC"
+                }
+            ]
+        },
+        {
+            "pos": 3,
+            "id": 3,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Tile 3",
+            "description": "",
+            "img": "",
+            "points": 40,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 3",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 3",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 4,
+            "id": 4,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Tile 4",
+            "description": "",
+            "img": "",
+            "points": 50,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 4",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 4",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 5,
+            "id": 5,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Tile 5",
+            "description": "",
+            "img": "",
+            "points": 10,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 5",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 5",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 6,
+            "id": 6,
+            "tileType": "blackout",
+            "region": "Varrock",
+            "title": "Tile 6",
+            "description": "",
+            "img": "",
+            "points": 20,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 6",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 6",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 7,
+            "id": 7,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Tile 7",
+            "description": "",
+            "img": "",
+            "points": 30,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 7",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 7",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 8,
+            "id": 8,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Tile 8",
+            "description": "",
+            "img": "",
+            "points": 40,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 8",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 8",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 9,
+            "id": 9,
+            "tileType": "showdown",
+            "region": "Wilderness",
+            "title": "Tile 9",
+            "description": "",
+            "img": "",
+            "points": 50,
+            "goal": 1,
+            "done": true,
+            "collected": 600,
+            "required": 500,
+            "tags": [],
+            "items": [],
+            "groups": [],
+            "submitItems": [],
+            "score": 600,
+            "tierThreshold": 500,
+            "rates": [
+                {
+                    "label": "Boss: Zulrah",
+                    "rate": "1 pts/KC"
+                }
+            ]
+        },
+        {
+            "pos": 10,
+            "id": 10,
+            "tileType": "blackout",
+            "region": "Wilderness",
+            "title": "Tile 10",
+            "description": "",
+            "img": "",
+            "points": 10,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 10",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 10",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 11,
+            "id": 11,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Tile 11",
+            "description": "",
+            "img": "",
+            "points": 20,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 11",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 11",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 12,
+            "id": 12,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Tile 12",
+            "description": "",
+            "img": "",
+            "points": 30,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 12",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 12",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 13,
+            "id": 13,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Tile 13",
+            "description": "",
+            "img": "",
+            "points": 40,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 13",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 13",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 14,
+            "id": 14,
+            "tileType": "blackout",
+            "region": "Wilderness",
+            "title": "Tile 14",
+            "description": "",
+            "img": "",
+            "points": 50,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 14",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 14",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 15,
+            "id": 15,
+            "tileType": "blackout",
+            "region": "Wilderness",
+            "title": "Tile 15",
+            "description": "",
+            "img": "",
+            "points": 10,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 15",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 15",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 16,
+            "id": 16,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Tile 16",
+            "description": "",
+            "img": "",
+            "points": 20,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 16",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 16",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 17,
+            "id": 17,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Tile 17",
+            "description": "",
+            "img": "",
+            "points": 30,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 17",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 17",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 18,
+            "id": 18,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Tile 18",
+            "description": "",
+            "img": "",
+            "points": 40,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 18",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 18",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 19,
+            "id": 19,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Tile 19",
+            "description": "",
+            "img": "",
+            "points": 50,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 19",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 19",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 20,
+            "id": 20,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Tile 20",
+            "description": "",
+            "img": "",
+            "points": 10,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 20",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 20",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 21,
+            "id": 21,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Tile 21",
+            "description": "",
+            "img": "",
+            "points": 20,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 21",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 21",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 22,
+            "id": 22,
+            "tileType": "showdown",
+            "region": "Zanaris",
+            "title": "Tile 22",
+            "description": "",
+            "img": "",
+            "points": 30,
+            "goal": 1,
+            "done": true,
+            "collected": 600,
+            "required": 500,
+            "tags": [],
+            "items": [],
+            "groups": [],
+            "submitItems": [],
+            "score": 600,
+            "tierThreshold": 500,
+            "rates": [
+                {
+                    "label": "Boss: Zulrah",
+                    "rate": "1 pts/KC"
+                }
+            ]
+        },
+        {
+            "pos": 23,
+            "id": 23,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Tile 23",
+            "description": "",
+            "img": "",
+            "points": 40,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 23",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 23",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 24,
+            "id": 24,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Tile 24",
+            "description": "",
+            "img": "",
+            "points": 50,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 24",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 24",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        },
+        {
+            "pos": 25,
+            "id": 25,
+            "tileType": "blackout",
+            "region": "",
+            "title": "Tile 25",
+            "description": "",
+            "img": "",
+            "points": 10,
+            "goal": 1,
+            "done": false,
+            "collected": 0,
+            "required": 1,
+            "tags": [],
+            "items": [
+                {
+                    "label": "Thing 25",
+                    "need": 1,
+                    "approved": 0,
+                    "player": "",
+                    "pending": 0
+                }
+            ],
+            "groups": [],
+            "submitItems": [
+                {
+                    "label": "Thing 25",
+                    "type": "individual",
+                    "index": 0,
+                    "groupIndex": 0,
+                    "itemIndex": 0,
+                    "approved": false,
+                    "pending": false
+                }
+            ]
+        }
+    ],
+    "hiddenTiles": false,
+    "points": {
+        "isShowdown": false,
+        "tilePts": 110,
+        "rowPts": 0,
+        "colPts": 0,
+        "diagPts": 0,
+        "clogPts": 0,
+        "rows": 0,
+        "cols": 0,
+        "diags": 0,
+        "tiles": [
+            {
+                "label": "Tile 9",
+                "pts": 50
+            },
+            {
+                "label": "Tile 2",
+                "pts": 30
+            },
+            {
+                "label": "Tile 22",
+                "pts": 30
+            }
+        ],
+        "flatPts": 0,
+        "roguelite": null,
+        "total": 110
+    }
+}

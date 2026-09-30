@@ -41,6 +41,13 @@ final class Brand
 	static Color BG_WELL = new Color(0x040404);
 	/** --bg-completed-well: the same box on a finished tile. */
 	static Color BG_COMPLETED_WELL = new Color(0x1A1408);
+
+	/**
+	 * The background the site gives a finished tile — a lifted, accent-tinted
+	 * version of the plain tile colour, not merely a lighter grey. Board cells
+	 * blend towards it as a Showdown tile climbs its tiers.
+	 */
+	static Color BG_COMPLETED = new Color(0x282010);
 	/** --border-main */
 	static Color BORDER = new Color(0x2A2820);
 	/** --accent */
@@ -72,12 +79,75 @@ final class Brand
 		BG_TILE = parse(vars.get("--bg-tile"), BG_TILE);
 		BG_WELL = parse(vars.get("--bg-well"), BG_WELL);
 		BG_COMPLETED_WELL = parse(vars.get("--bg-completed-well"), BG_COMPLETED_WELL);
+		BG_COMPLETED = parse(vars.get("--bg-completed"), BG_COMPLETED);
 		BORDER = parse(vars.get("--border-main"), BORDER);
 		ACCENT = parse(vars.get("--accent"), ACCENT);
 		TEXT_MAIN = parse(vars.get("--text-main"), TEXT_MAIN);
 		TEXT_BRIGHT = parse(vars.get("--text-bright"), TEXT_BRIGHT);
 		TEXT_DIM = parse(vars.get("--text-dim"), TEXT_DIM);
 		COMPLETED = parse(vars.get("--text-completed"), COMPLETED);
+	}
+
+	/**
+	 * A region's colour: the theme accent's own hue, rotated by the golden angle once
+	 * per region, at a fixed saturation and lightness.
+	 *
+	 * Deliberately the same formula the website uses —
+	 * {@code hsl(calc(var(--accent-h) + index * 137.508) 70% 60%)} — so a region is
+	 * the same colour in the panel as on the board a player is looking at beside it.
+	 * The golden angle is what keeps the colours apart at any number of regions;
+	 * stepping by a round number like 90 would land the fifth region back on the first.
+	 *
+	 * @param index the region's position in {@link BoardModels.Board#regions}
+	 */
+	/** What themes.js falls back to for a colour with no hue: the default gold. */
+	private static final double ACCENT_HUE_FALLBACK = 42;
+
+	static Color regionColor(int index)
+	{
+		if (index < 0)
+		{
+			return TEXT_DIM;
+		}
+		final float[] hsb = Color.RGBtoHSB(ACCENT.getRed(), ACCENT.getGreen(), ACCENT.getBlue(), null);
+		// Hue is the same angle in HSB and HSL, so it carries over; saturation and
+		// lightness do not, which is why the conversion below is HSL and not
+		// Color.getHSBColor(). Using HSB there gives visibly different colours.
+		//
+		// Rounded to a whole degree because themes.js publishes --accent-h that way,
+		// and the website's colours are computed from that rounded value. Carrying the
+		// extra precision here put the panel a shade off the board it sits beside.
+		//
+		// A greyscale accent has no hue to rotate away from, and the two sides have to
+		// agree on what to do about that. themes.js substitutes the default gold;
+		// RGBtoHSB reports 0, which is red. Two of the thirty themes ship a greyscale
+		// accent (#ffffff and #cccccc), and on those the panel drew a red-based set of
+		// regions against the site's gold-based one.
+		final double base = (hsb[1] == 0f) ? ACCENT_HUE_FALLBACK : Math.round(hsb[0] * 360.0);
+		final double hue = (base + index * 137.508) % 360.0;
+		return hsl(hue, 0.70, 0.60);
+	}
+
+	/** CSS hsl() -> Color. Java ships HSB (HSV) only, and the two are not the same. */
+	private static Color hsl(double hDegrees, double s, double l)
+	{
+		final double h = ((hDegrees % 360) + 360) % 360;
+		final double c = (1 - Math.abs(2 * l - 1)) * s;
+		final double x = c * (1 - Math.abs(((h / 60.0) % 2) - 1));
+		final double m = l - c / 2;
+
+		double r = 0, g = 0, b = 0;
+		if (h < 60)       { r = c; g = x; }
+		else if (h < 120) { r = x; g = c; }
+		else if (h < 180) { g = c; b = x; }
+		else if (h < 240) { g = x; b = c; }
+		else if (h < 300) { r = x; b = c; }
+		else              { r = c; b = x; }
+
+		return new Color(
+			(int) Math.round((r + m) * 255),
+			(int) Math.round((g + m) * 255),
+			(int) Math.round((b + m) * 255));
 	}
 
 	/** "#d8a830" -> Color, keeping the old value on anything unparseable. */
@@ -117,6 +187,13 @@ final class Brand
 	/** The same less a row's own padding. */
 	static final int ROW_WIDTH = CONTENT_WIDTH - (PAD * 2);
 	static final int ROW_GAP = 4;
+
+	/**
+	 * Below this, a row's name and value stop sharing a line and stack instead.
+	 * Roughly a dozen characters of the small font — narrower than this and the name
+	 * wraps into an unreadable column.
+	 */
+	static final int MIN_LABEL_WIDTH = 60;
 
 	private Brand()
 	{
@@ -195,11 +272,33 @@ final class Brand
 		value.setForeground(rightColor);
 		value.setVerticalAlignment(javax.swing.SwingConstants.TOP);
 
+		// Some values are longer than the whole panel — a raid tile's purple rate is
+		// "125000 pts/item <=5 / 62500 pts/item >5". Side by side, BorderLayout gives
+		// EAST its full preferred width and leaves the label nothing, so the label
+		// wrapped to one character per line and neither half could be read. Past that
+		// point the two stack instead: name on its own line, rate wrapped beneath it.
+		final int labelWidth = ROW_WIDTH - value.getPreferredSize().width - ROW_GAP;
+		if (labelWidth < MIN_LABEL_WIDTH)
+		{
+			row.setLayout(new BoxLayout(row, BoxLayout.Y_AXIS));
+
+			// Sized to ROW_WIDTH rather than through setWrapped(), which assumes the
+			// full content width; these sit inside a row that is already padded.
+			label.setSize(ROW_WIDTH, Short.MAX_VALUE);
+
+			final JTextArea wrappedValue = wrapping(FontManager.getRunescapeSmallFont(), rightColor);
+			wrappedValue.setText(right);
+			wrappedValue.setSize(ROW_WIDTH, Short.MAX_VALUE);
+
+			row.add(label);
+			row.add(wrappedValue);
+			return row;
+		}
+
 		// A JTextArea works out its wrapped height from its current width, and inside
 		// a BorderLayout it is asked for that height before it has been given one — so
 		// it answers "one line" and the rest of the label is cut off. Tell it the
 		// width it is going to get.
-		final int labelWidth = Math.max(40, ROW_WIDTH - value.getPreferredSize().width - ROW_GAP);
 		label.setSize(labelWidth, Short.MAX_VALUE);
 
 		row.add(label, java.awt.BorderLayout.CENTER);
@@ -305,6 +404,16 @@ final class Brand
 		p.setMaximumSize(new Dimension(Integer.MAX_VALUE, 18));
 		p.setAlignmentX(Component.LEFT_ALIGNMENT);
 		return p;
+	}
+
+	/** Mix two colours. {@code amount} 0 gives {@code from}, 1 gives {@code to}. */
+	static Color blend(Color from, Color to, float amount)
+	{
+		final float p = Math.max(0f, Math.min(1f, amount));
+		return new Color(
+			(int) (from.getRed() + (to.getRed() - from.getRed()) * p),
+			(int) (from.getGreen() + (to.getGreen() - from.getGreen()) * p),
+			(int) (from.getBlue() + (to.getBlue() - from.getBlue()) * p));
 	}
 
 	static Font bold(float size)

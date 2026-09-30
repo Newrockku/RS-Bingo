@@ -118,6 +118,19 @@ final class Text
 	 * Compact numbers, matching game.html's modal: 1.2M, 4.5K, 850. Showdown scores
 	 * run into the millions and the panel is 225px wide.
 	 */
+	/**
+	 * Grouped digits, as the site's toLocaleString() renders them: 2542 -> "2,542".
+	 * Points are compared between teams, and separators are what make a four figure
+	 * total readable at a glance next to a three figure one.
+	 */
+	static String thousands(long n)
+	{
+		return GROUPED.format(n);
+	}
+
+	private static final java.text.NumberFormat GROUPED =
+		java.text.NumberFormat.getIntegerInstance(java.util.Locale.US);
+
 	static String compact(double n)
 	{
 		final double abs = Math.abs(n);

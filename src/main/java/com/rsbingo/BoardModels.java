@@ -27,6 +27,46 @@ public class BoardModels
 		public List<TeamSummary> teams = new ArrayList<>();
 
 		/**
+		 * The board's named areas, in the order the server lists them — which is the
+		 * order they first appear in the event's tile definitions, not board order.
+		 *
+		 * A region's colour is derived from its index here, so this ordering is what
+		 * keeps the panel painting a region the same colour the website does. Working
+		 * it out from {@link #board} instead would order by position and drift.
+		 *
+		 * Empty when the event has regions switched off.
+		 */
+		public List<String> regions = new ArrayList<>();
+
+		public boolean hasRegions()
+		{
+			return regions != null && !regions.isEmpty();
+		}
+
+		/** Where a region sits in {@link #regions}, or -1 when it is not one. */
+		public int regionIndex(String region)
+		{
+			if (region == null || region.isEmpty() || regions == null)
+			{
+				return -1;
+			}
+			return regions.indexOf(region);
+		}
+
+		/** The region on a 1-based board position, or "" for none. */
+		public String regionAt(int pos)
+		{
+			for (BoardTile t : board)
+			{
+				if (t.pos == pos)
+				{
+					return t.region == null ? "" : t.region;
+				}
+			}
+			return "";
+		}
+
+		/**
 		 * The event's codeword, sent only once the site itself would show it. Stamped
 		 * onto submission screenshots and used to authorise the submission, so the
 		 * player never has to type it anywhere. Null while still withheld.
@@ -38,9 +78,23 @@ public class BoardModels
 		public List<BoardTile> board = new ArrayList<>();
 		public boolean hiddenTiles;
 
+		/** How the viewed team's total was arrived at. Null until a team is chosen. */
+		public Points points;
+
 		public boolean isShowdown()
 		{
 			return "Showdown".equals(format);
+		}
+
+		/**
+		 * A board that mixes both kinds of tile. Its showdown tiles have no tier
+		 * ladder: each one is complete or not and pays its own flat points, so the
+		 * board is scored like a Blackout one — which is why {@link #isShowdown()}
+		 * is deliberately false here. Only the per-tile presentation differs.
+		 */
+		public boolean isHybrid()
+		{
+			return "Hybrid".equals(format);
 		}
 
 		/** Submissions are only open between the start and end dates. */
@@ -112,6 +166,44 @@ public class BoardModels
 		}
 	}
 
+	/**
+	 * The itemised points for one team, as the website's points tooltip shows them.
+	 * Computed by the server — sc_computeAllTeamPointsBreakdown() — which is also
+	 * where the total on the standings comes from, so the two cannot disagree.
+	 */
+	public static class Points
+	{
+		public boolean isShowdown;
+		public int tilePts;
+		public int rowPts;
+		public int colPts;
+		public int diagPts;
+		public int clogPts;
+
+		/** Completed line counts. Only meaningful off Showdown, where the site
+		 *  labels the rows "Rows (x2)" rather than naming a flat bonus. */
+		public int rows;
+		public int cols;
+		public int diags;
+
+		public int total;
+
+		/** Per-tile contributions, already sorted high to low by the server. */
+		public List<PointsTile> tiles = new ArrayList<>();
+
+		/** True when any bonus applies; the site only prints a Total line then. */
+		public boolean hasBonuses()
+		{
+			return rowPts != 0 || colPts != 0 || diagPts != 0 || clogPts != 0;
+		}
+	}
+
+	public static class PointsTile
+	{
+		public String label;
+		public int pts;
+	}
+
 	public static class TeamSummary
 	{
 		public String name;
@@ -141,7 +233,19 @@ public class BoardModels
 		public List<TileItem> items = new ArrayList<>();
 		public List<TileGroup> groups = new ArrayList<>();
 
-		/** Showdown only; 0 on other formats. */
+		/**
+		 * Which rules score this tile: "showdown" (accumulate a score toward a
+		 * threshold) or "blackout" (collect the items listed). Sent per tile because a
+		 * Hybrid board mixes both. Null from a server that predates it, where the
+		 * board's format decides for every tile — see {@link #scoredByShowdownRules}.
+		 */
+		public String tileType;
+
+		/** The named board area this tile belongs to; "" when it has none, and always
+		 *  "" while the event has regions switched off. */
+		public String region;
+
+		/** Showdown only; absent on Hybrid, whose showdown tiles do not tier. */
 		public Integer tier;
 		public Integer maxTier;
 
@@ -183,6 +287,30 @@ public class BoardModels
 		public boolean hasTierProgress()
 		{
 			return score != null && tierThreshold != null && tierThreshold > 0;
+		}
+
+		/**
+		 * Whether this tile is judged on an accumulated score rather than on a
+		 * checklist of items — which decides what collected/required are counted in,
+		 * and so whether they may be labelled "items".
+		 *
+		 * Asked of the tile and the board together: on a Showdown board every tile is
+		 * scored this way and older servers send no tileType at all, while on a Hybrid
+		 * board only the tiles authored as showdown tiles are.
+		 */
+		public boolean scoredByShowdownRules(Board board)
+		{
+			return (board != null && board.isShowdown()) || "showdown".equals(tileType);
+		}
+
+		/**
+		 * Progress as the server counted it, with its unit — "3/4 items" for a tile
+		 * that collects drops, "600/500 pts" for one that accumulates a score. Getting
+		 * this wrong reads as a tile needing six hundred of something.
+		 */
+		public String progressTextWithUnit(Board board)
+		{
+			return progressText() + (scoredByShowdownRules(board) ? " pts" : " items");
 		}
 
 		/** True once every tier is banked — the site labels this "MAX". */

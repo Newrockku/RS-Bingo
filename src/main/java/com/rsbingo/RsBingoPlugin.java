@@ -308,7 +308,15 @@ public class RsBingoPlugin extends Plugin
 		if (code.isEmpty())
 		{
 			panel.clearBoard();
-			panel.setStatus("Set an event code in the plugin settings.");
+
+			// With an account linked the code is optional: the event list picks one as
+			// soon as it lands, so asking for a code here would be telling the player
+			// to do something the plugin is about to do for them.
+			final String token = config.accountToken();
+			final boolean linked = token != null && !token.trim().isEmpty();
+			panel.setStatus(linked
+				? "Loading your events…"
+				: "Set an event code in the plugin settings, or link your account.");
 			return;
 		}
 

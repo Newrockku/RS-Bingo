@@ -74,6 +74,7 @@ tasks.register('preview', JavaExec) {
     mainClass = 'com.rsbingo.PanelPreview'
 
     systemProperty 'rs.url', findProperty('url') ?: 'https://rs-bingo.com'
+    systemProperty 'rs.width', findProperty('width') ?: ''
     systemProperty 'rs.event', findProperty('event') ?: ''
     systemProperty 'rs.team', findProperty('team') ?: ''
     systemProperty 'rs.tile', findProperty('tile') ?: '0'

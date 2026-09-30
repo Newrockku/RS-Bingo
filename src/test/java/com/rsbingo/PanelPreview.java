@@ -152,7 +152,11 @@ public class PanelPreview
 			// panel renders at the 225px the client actually gives it.
 			frame.setUndecorated(true);
 			frame.getContentPane().add(panel);
-			frame.setSize(RsBingoPanel.PANEL_WIDTH, HEIGHT);
+			// Width is overridable so the panel can be rendered at sidebar widths other
+			// than the 225 the plugin assumes — which is where layout that is pinned to
+			// a constant rather than to the width it is given shows up.
+			frame.setSize(Integer.parseInt(property("rs.width",
+				String.valueOf(RsBingoPanel.PANEL_WIDTH))), HEIGHT);
 			frame.addNotify();
 			frame.validate();
 		});

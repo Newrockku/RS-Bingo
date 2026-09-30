@@ -32,8 +32,19 @@ class TileCell extends JPanel
 	/** Dark enough to read as an empty track over any artwork. */
 	private static final Color BAR_TRACK = new Color(0, 0, 0, 170);
 
+
 	private final BoardModels.BoardTile tile;
 	private final boolean showdown;
+	/** Kept so the tooltip can ask what this tile's counts are measured in — a Hybrid
+	 *  board answers that per tile, not per board. */
+	private final BoardModels.Board board;
+
+	/** The tile this cell draws. The grid reads it to paint region perimeters in the
+	 *  gutters between cells, which no single cell can reach. */
+	BoardModels.BoardTile tile()
+	{
+		return tile;
+	}
 
 	/** Set once the artwork arrives; until then the cell paints its plain state. */
 	private BufferedImage image;
@@ -42,6 +53,7 @@ class TileCell extends JPanel
 			 RsBingoConfig config, String siteUrl, int size, Runnable onClick)
 	{
 		this.tile = tile;
+		this.board = board;
 		this.showdown = board.isShowdown();
 
 		setPreferredSize(new Dimension(size, size));
@@ -93,6 +105,11 @@ class TileCell extends JPanel
 
 			// Rounded, like the site's tiles. The artwork is clipped to the same shape
 			// so it can't paint over the corners.
+			//
+			// The fill carries progress the way the site's does: a tile lifts from the
+			// plain background towards the completed one as it climbs, so a Showdown
+			// board's spread of tiers is visible without reading a single badge, and a
+			// finished tile is lit rather than merely outlined.
 			g.setColor(Brand.BG_WELL);
 			g.fillRoundRect(0, 0, w - 1, h - 1, RADIUS, RADIUS);
 
@@ -106,6 +123,11 @@ class TileCell extends JPanel
 			g.setClip(new java.awt.geom.RoundRectangle2D.Float(0, 0, w - 1, h - 1, RADIUS, RADIUS));
 
 			final float progress = progress();
+
+			// Painted under the artwork, never over it, so the art keeps its own
+			// colours — the same order the site uses, where the item sprite sits on
+			// the tinted tile rather than being washed by it.
+			paintTierWash(g, w, h, progress);
 
 			if (image != null)
 			{
@@ -129,6 +151,8 @@ class TileCell extends JPanel
 			g.setClip(null);
 			g.setColor(borderColor());
 			g.drawRoundRect(0, 0, w - 1, h - 1, RADIUS, RADIUS);
+
+
 
 			g.setFont(getFont().deriveFont(Font.BOLD, 10f));
 
@@ -260,10 +284,38 @@ class TileCell extends JPanel
 		return tile.done ? 1f : 0f;
 	}
 
+	/**
+	 * The diagonal tint a tile carries as it climbs its tiers, so a finished tile is
+	 * lit rather than merely outlined and a Showdown board's spread is readable
+	 * without checking a single badge.
+	 *
+	 * This mirrors the site's rule for {@code .tile.completed}, which washes the tile
+	 * with the completion colour at 35% down to 12% alpha across the diagonal — not
+	 * with the {@code --bg-completed} token, which is a much darker colour used for
+	 * panels behind the board. Scaling the alpha by progress turns the site's on/off
+	 * state into the gradient across tiers.
+	 */
+	private static void paintTierWash(Graphics2D g, int w, int h, float progress)
+	{
+		if (progress <= 0f)
+		{
+			return;
+		}
+
+		final Color c = Brand.COMPLETED;
+		final int near = Math.round(255 * 0.35f * progress);
+		final int far = Math.round(255 * 0.12f * progress);
+
+		g.setPaint(new java.awt.GradientPaint(
+			0, 0, new Color(c.getRed(), c.getGreen(), c.getBlue(), near),
+			w, h, new Color(c.getRed(), c.getGreen(), c.getBlue(), far)));
+		g.fillRoundRect(0, 0, w - 1, h - 1, RADIUS, RADIUS);
+	}
+
 	/** Cold-to-warm fill used when there is no artwork to draw. */
 	private static Color shade(float progress)
 	{
-		return blend(Brand.BG_WELL, Brand.COMPLETED.darker(), progress);
+		return Brand.blend(Brand.BG_WELL, Brand.COMPLETED.darker(), progress);
 	}
 
 	private Color borderColor()
@@ -283,16 +335,7 @@ class TileCell extends JPanel
 		}
 		// Part-way tiles get a border between neutral and complete, so a Showdown
 		// board's spread of tiers is visible without reading every badge.
-		return blend(Brand.BORDER, Brand.COMPLETED, p);
-	}
-
-	private static Color blend(Color from, Color to, float amount)
-	{
-		final float p = Math.max(0f, Math.min(1f, amount));
-		return new Color(
-			(int) (from.getRed() + (to.getRed() - from.getRed()) * p),
-			(int) (from.getGreen() + (to.getGreen() - from.getGreen()) * p),
-			(int) (from.getBlue() + (to.getBlue() - from.getBlue()) * p));
+		return Brand.blend(Brand.BORDER, Brand.COMPLETED, p);
 	}
 
 	private String tooltip()
@@ -314,9 +357,13 @@ class TileCell extends JPanel
 			tip.append("<br>").append(tile.done ? "Complete" : "Not complete");
 		}
 
-		if (tile.xp == null && (tile.hasCounts() || tile.neededCount() > 0))
+		// Not on Showdown: the tier above is what the tile is judged on, and an item
+		// count there reads as progress towards something that is not being measured.
+		if (!showdown && tile.xp == null && (tile.hasCounts() || tile.neededCount() > 0))
 		{
-			tip.append("<br>").append(tile.progressText()).append(" items");
+			// Unit-aware: on a Hybrid board these counts are points toward a threshold
+			// for a showdown tile, and items for a blackout one, on the same grid.
+			tip.append("<br>").append(tile.progressTextWithUnit(board));
 		}
 
 		return tip.append("</html>").toString();

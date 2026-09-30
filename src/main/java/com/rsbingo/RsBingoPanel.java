@@ -4,6 +4,9 @@ import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.util.function.Consumer;
@@ -60,7 +63,201 @@ class RsBingoPanel extends PluginPanel
 	private final JLabel statusLabel = new JLabel();
 	/** Wraps rather than clips: event names are organiser-supplied and can be long. */
 	private final JTextArea headerLabel = new JTextArea();
-	private final JPanel grid = new JPanel();
+	/**
+	 * The board. Paints each region's perimeter itself, after its cells have drawn.
+	 *
+	 * It has to be done here rather than in TileCell because the outline goes *around*
+	 * the tiles, in the gutter between them — space that belongs to this panel and
+	 * that no cell can paint into. Drawing it inside the cells instead put the line on
+	 * top of the artwork and made two adjacent regions share one doubled edge.
+	 */
+	private final JPanel grid = new JPanel()
+	{
+		@Override
+		protected void paintChildren(Graphics g)
+		{
+			super.paintChildren(g);
+			paintRegionOutlines(g);
+		}
+
+		/**
+		 * Height derived from the width this actually got, not from a constant.
+		 *
+		 * GRID_WIDTH assumes the panel's full 225px less padding and a scrollbar, but
+		 * the width handed out depends on whether that scrollbar is showing. Pinning
+		 * the grid to the assumption left it narrower than the wells beneath it, with
+		 * the shortfall showing as dead space down the right-hand side. GridLayout
+		 * already divides whatever width it is given; only the height has to follow,
+		 * or the cells stop being square.
+		 */
+		@Override
+		public Dimension getPreferredSize()
+		{
+			final int w = getWidth() > 0 ? getWidth() : GRID_WIDTH;
+			return new Dimension(w, gridHeightFor(w));
+		}
+
+		@Override
+		public Dimension getMaximumSize()
+		{
+			// Unbounded width so BoxLayout stretches it to the viewport instead of
+			// leaving it at its preferred size and aligning it left.
+			return gridCols <= 0
+				? super.getMaximumSize()
+				: new Dimension(Integer.MAX_VALUE, gridHeightFor(getWidth() > 0 ? getWidth() : GRID_WIDTH));
+		}
+	};
+
+	/** Board shape currently laid out, for the sizing above. 0 when empty. */
+	private int gridCols;
+	private int gridRows;
+
+	/** The square-cell height implied by a given grid width. */
+	private int gridHeightFor(int width)
+	{
+		if (gridCols <= 0 || gridRows <= 0)
+		{
+			return 0;
+		}
+		final int inner = width - (REGION_PAD * 2);
+		final int cell = Math.max(8, (inner - (gridCols - 1) * CELL_GAP) / gridCols);
+		return cell * gridRows + (gridRows - 1) * CELL_GAP + (REGION_PAD * 2);
+	}
+
+	/** The board currently drawn in {@link #grid}, for its region painting. */
+	private BoardModels.Board gridBoard;
+
+	/**
+	 * Empty the board and let it collapse again.
+	 *
+	 * buildBoard() pins the grid's size to keep its cells square, so clearing it
+	 * without releasing that would leave an empty grid still holding a board's worth
+	 * of space. Dropping the board reference with it also stops the region painter
+	 * drawing against a layout that is no longer there.
+	 */
+	private void clearGrid()
+	{
+		gridBoard = null;
+		gridCols = 0;
+		gridRows = 0;
+		grid.removeAll();
+		grid.setPreferredSize(null);
+		grid.setMaximumSize(null);
+		grid.setBorder(null);
+	}
+
+	/**
+	 * Region perimeter stroke. One pixel, because two of them have to fit side by
+	 * side in a {@link #CELL_GAP}-wide gutter without touching.
+	 */
+	private static final int REGION_EDGE = 1;
+
+	/**
+	 * How far outside its own cells a region draws its perimeter.
+	 *
+	 * Each region hugs its own tiles rather than centring the line in the shared
+	 * gutter. Centred, two neighbouring regions computed the same coordinates and
+	 * painted over each other: only the second colour survived, and at 2px the
+	 * stroke bled onto both cells so the boundary looked like one thick line of
+	 * indeterminate owner. Hugging leaves a clear pixel between them, so a shared
+	 * border reads as two lines — one per region, each in its own colour.
+	 */
+	private static final int REGION_INSET = 1;
+
+	/** Margin around the grid so an edge tile's outline has somewhere to sit. */
+	private static final int REGION_PAD = 3;
+
+	/**
+	 * Each region's perimeter, drawn in the gutters around its tiles.
+	 *
+	 * A side is drawn only where the neighbouring square holds a different region, so
+	 * a group of tiles reads as one enclosed area rather than a set of boxed ones. The
+	 * line sits in the gap just outside its own cells, which is why it surrounds the
+	 * tiles instead of sitting on their artwork — and why adjacent cells of the same
+	 * region produce no line at all between them.
+	 */
+	private void paintRegionOutlines(Graphics graphics)
+	{
+		final BoardModels.Board b = gridBoard;
+		if (b == null || !b.hasRegions())
+		{
+			return;
+		}
+
+		final Graphics2D g = (Graphics2D) graphics.create();
+		try
+		{
+			// Off: these are axis-aligned hairlines, and antialiasing only blurs them.
+			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+			g.setStroke(new java.awt.BasicStroke(REGION_EDGE));
+
+			final int cols = Math.max(1, b.cols);
+			final int rows = Math.max(1, b.rows);
+			final int o = REGION_INSET;
+
+			for (int i = 0; i < grid.getComponentCount(); i++)
+			{
+				final java.awt.Component comp = grid.getComponent(i);
+				if (!(comp instanceof TileCell))
+				{
+					continue;
+				}
+				final BoardModels.BoardTile t = ((TileCell) comp).tile();
+				final int idx = b.regionIndex(t.region);
+				if (idx < 0)
+				{
+					continue;
+				}
+
+				final java.awt.Rectangle r = comp.getBounds();
+				final int row = (t.pos - 1) / cols;
+				final int col = (t.pos - 1) % cols;
+				final int x1 = r.x - o;
+				final int y1 = r.y - o;
+				final int x2 = r.x + r.width + o - 1;
+				final int y2 = r.y + r.height + o - 1;
+
+				final boolean up = sameRegion(b, t.region, row - 1, col, rows, cols);
+				final boolean down = sameRegion(b, t.region, row + 1, col, rows, cols);
+				final boolean left = sameRegion(b, t.region, row, col - 1, rows, cols);
+				final boolean right = sameRegion(b, t.region, row, col + 1, rows, cols);
+
+				// Reach across the gutter towards neighbours in the same region, and
+				// stop short of ones in another. Hugging its own cells leaves each edge
+				// ending REGION_INSET short of the gutter's far side, so two tiles in
+				// one region left an unpainted pixel between their edges and the
+				// perimeter came out dashed. Extending only towards its own kind keeps
+				// that pixel from being claimed where two regions meet.
+				final int reach = Math.max(0, CELL_GAP - (REGION_INSET * 2));
+				final int ex1 = x1 - (left ? reach : 0);
+				final int ex2 = x2 + (right ? reach : 0);
+				final int ey1 = y1 - (up ? reach : 0);
+				final int ey2 = y2 + (down ? reach : 0);
+
+				g.setColor(Brand.regionColor(idx));
+				if (!up) g.drawLine(ex1, y1, ex2, y1);
+				if (!down) g.drawLine(ex1, y2, ex2, y2);
+				if (!left) g.drawLine(x1, ey1, x1, ey2);
+				if (!right) g.drawLine(x2, ey1, x2, ey2);
+			}
+		}
+		finally
+		{
+			g.dispose();
+		}
+	}
+
+	/** Whether the square at this row/col carries the region named. */
+	private static boolean sameRegion(BoardModels.Board b, String region, int row, int col,
+		int rows, int cols)
+	{
+		if (row < 0 || row >= rows || col < 0 || col >= cols)
+		{
+			return false;
+		}
+		return region != null && !region.isEmpty()
+			&& region.equals(b.regionAt(row * cols + col + 1));
+	}
 	private final JLabel countdown = new JLabel();
 	/**
 	 * Shown next to the event name, but only when the site itself would show it —
@@ -78,6 +275,9 @@ class RsBingoPanel extends PluginPanel
 	private JLabel standingsHeading;
 	private JPanel standings;
 	private JLabel rosterHeading;
+	private JLabel pointsHeading;
+	private JPanel pointsWell;
+	private JPanel pointsBreakdown;
 	private JPanel rosterWell;
 	private JPanel roster;
 	private JLabel themeHeading;
@@ -265,12 +465,17 @@ class RsBingoPanel extends PluginPanel
 		roster = Brand.section();
 		rosterWell.add(roster);
 
+		pointsHeading = Brand.sectionLabel("Points");
+		pointsWell = Brand.well();
+		pointsBreakdown = Brand.section();
+		pointsWell.add(pointsBreakdown);
+
 		final JPanel boardCard = new JPanel();
 		boardCard.setLayout(new BoxLayout(boardCard, BoxLayout.Y_AXIS));
 		boardCard.setBackground(Brand.BG_TILE);
 
 		for (JComponent c : new JComponent[]{grid, standingsHeading, standings,
-			rosterHeading, rosterWell})
+			rosterHeading, rosterWell, pointsHeading, pointsWell})
 		{
 			c.setAlignmentX(LEFT_ALIGNMENT);
 			boardCard.add(c);
@@ -514,9 +719,10 @@ class RsBingoPanel extends PluginPanel
 
 			buildStandings(board, preferred == null ? null : preferred.name);
 			buildRoster(preferred);
+			buildPoints(null);
 			applyCountdown(board);
 
-			grid.removeAll();
+			clearGrid();
 			grid.revalidate();
 			grid.repaint();
 			cards.show(deck, CARD_BOARD);
@@ -551,6 +757,86 @@ class RsBingoPanel extends PluginPanel
 		}
 	}
 
+	/**
+	 * Where the team's total came from, itemised as the website's points tooltip
+	 * does it: tile points, each line bonus that applies, the collection-log bonus,
+	 * a total, then the per-tile contributions.
+	 *
+	 * The server sends this already summed and sorted, so nothing here re-derives a
+	 * number that appears elsewhere in the panel.
+	 */
+	private void buildPoints(BoardModels.Points points)
+	{
+		pointsBreakdown.removeAll();
+
+		final boolean any = points != null;
+		pointsHeading.setVisible(any);
+		pointsWell.setVisible(any);
+		if (!any)
+		{
+			return;
+		}
+
+		pointsBreakdown.add(pointsRow("Tile pts", Text.thousands(points.tilePts), false));
+
+		// Off Showdown the site names the count of completed lines rather than a flat
+		// bonus, because two completed rows pay twice.
+		if (points.rowPts != 0)
+		{
+			pointsBreakdown.add(pointsRow(points.isShowdown ? "Row bonus" : "Rows (x" + points.rows + ")",
+				"+" + Text.thousands(points.rowPts), false));
+		}
+		if (points.colPts != 0)
+		{
+			pointsBreakdown.add(pointsRow(points.isShowdown ? "Col bonus" : "Cols (x" + points.cols + ")",
+				"+" + Text.thousands(points.colPts), false));
+		}
+		if (points.diagPts != 0)
+		{
+			pointsBreakdown.add(pointsRow(points.isShowdown ? "Diag bonus" : "Diags (x" + points.diags + ")",
+				"+" + Text.thousands(points.diagPts), false));
+		}
+		if (points.clogPts != 0)
+		{
+			pointsBreakdown.add(pointsRow("Coll. Log", "+" + Text.thousands(points.clogPts), false));
+		}
+
+		// The site prints a total only when something was added to the tile points;
+		// otherwise the total is the line above it and says nothing new.
+		if (points.hasBonuses())
+		{
+			pointsBreakdown.add(Box.createVerticalStrut(2));
+			pointsBreakdown.add(pointsRow("Total", Text.thousands(points.total), true));
+		}
+
+		if (!points.tiles.isEmpty())
+		{
+			pointsBreakdown.add(Box.createVerticalStrut(6));
+			final JLabel caption = new JLabel("Tile breakdown");
+			caption.setFont(FontManager.getRunescapeSmallFont());
+			caption.setForeground(Brand.TEXT_DIM);
+			caption.setAlignmentX(LEFT_ALIGNMENT);
+			caption.setBorder(BorderFactory.createEmptyBorder(0, 0, 2, 0));
+			pointsBreakdown.add(caption);
+
+			for (BoardModels.PointsTile tile : points.tiles)
+			{
+				pointsBreakdown.add(Brand.valueRow(
+					tile.label == null ? "" : tile.label,
+					Text.thousands(tile.pts),
+					Brand.TEXT_DIM, Brand.TEXT_MAIN, null));
+			}
+		}
+	}
+
+	private JPanel pointsRow(String label, String value, boolean total)
+	{
+		return Brand.valueRow(label, value,
+			total ? Brand.TEXT_BRIGHT : Brand.TEXT_MAIN,
+			total ? Brand.TEXT_BRIGHT : Brand.ACCENT,
+			null);
+	}
+
 	/** Who is on the selected team, with the logged-in character marked. */
 	private void buildRoster(BoardModels.TeamSummary team)
 	{
@@ -569,10 +855,23 @@ class RsBingoPanel extends PluginPanel
 		for (String player : team.players)
 		{
 			final boolean isMe = localPlayer != null && localPlayer.equalsIgnoreCase(player);
+
+			// Marked with a filled row rather than by colour alone. The accent is not
+			// reliably brighter than the body text: on Slate the text is near-white
+			// (#dcddde) and the accent is a mid blue (#7289da), so the highlighted
+			// name came out *dimmer* than everyone else's. A background reads as
+			// "this one" whatever hue a theme picks.
 			final JTextArea row = Brand.wrapping(FontManager.getRunescapeSmallFont(),
-				isMe ? Brand.ACCENT : Brand.TEXT_MAIN);
+				isMe ? Brand.TEXT_BRIGHT : Brand.TEXT_MAIN);
 			Brand.setWrapped(row, isMe ? (player + "  (you)") : player);
-			row.setBorder(BorderFactory.createEmptyBorder(1, 0, 1, 0));
+
+			// Same padding on every row, so the highlighted one does not shift.
+			row.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
+			if (isMe)
+			{
+				row.setOpaque(true);
+				row.setBackground(Brand.blend(Brand.BG_WELL, Brand.ACCENT, 0.28f));
+			}
 			roster.add(row);
 		}
 	}
@@ -621,6 +920,16 @@ class RsBingoPanel extends PluginPanel
 					eventBox.setSelectedItem(event);
 				}
 			}
+			// Nothing loaded yet: open the first event rather than asking for a code
+			// the dropdown is already holding. Linking an account is meant to replace
+			// typing codes, and an empty board next to a full list of your own events
+			// is the plugin withholding something it plainly has.
+			BoardModels.EventSummary autoSelect = null;
+			if ((loaded == null || loaded.trim().isEmpty()) && !list.events.isEmpty())
+			{
+				autoSelect = list.events.get(0);
+				eventBox.setSelectedItem(autoSelect);
+			}
 			populating = false;
 
 			final boolean any = eventBox.getItemCount() > 0;
@@ -628,6 +937,13 @@ class RsBingoPanel extends PluginPanel
 			eventBox.setVisible(any);
 			revalidate();
 			repaint();
+
+			// Outside the populating guard: this writes the code to the config, which
+			// is what actually loads the board.
+			if (autoSelect != null && autoSelect.eventId != null)
+			{
+				onEventSelected.accept(autoSelect.eventId);
+			}
 		});
 	}
 
@@ -760,12 +1076,37 @@ class RsBingoPanel extends PluginPanel
 			applyCountdown(board);
 			buildStandings(board, board.team);
 			buildRoster(teamNamed(board, board.team));
+			buildPoints(board.points);
 
 			final int cols = Math.max(1, board.cols);
-			final int cell = Math.max(24, (GRID_WIDTH - (cols - 1) * CELL_GAP) / cols);
+			final int rows = Math.max(1, board.rows);
 
+			// Square cells at any board size.
+			//
+			// GridLayout ignores a child's preferred size and simply divides the space
+			// it is given, so a cell is only square if the panel's height matches what
+			// its width implies. That used to be left to chance: the cell size carried a
+			// 24px floor, and on a 9x9 board the floor made the grid want 240px of
+			// height inside 209px of width, which GridLayout resolved as 20x24 cells.
+			// Deriving the height from the width that will actually be used keeps every
+			// board square, at the cost of small cells on the largest ones — which is
+			// unavoidable in a 225px panel.
+			gridBoard = board;
+			gridCols = cols;
+			gridRows = rows;
 			grid.removeAll();
 			grid.setLayout(new GridLayout(0, cols, CELL_GAP, CELL_GAP));
+			// Room for a region outline on an edge tile, which sits outside the cell.
+			grid.setBorder(BorderFactory.createEmptyBorder(REGION_PAD, REGION_PAD, REGION_PAD, REGION_PAD));
+			// Sizes come from the overrides on the field; setting them here would pin
+			// the grid to a width it may not be given.
+			grid.setPreferredSize(null);
+			grid.setMaximumSize(null);
+
+			// Only a hint for the cells' preferred size — GridLayout divides the real
+			// width among them regardless, which is what lets the grid stretch.
+			final int cell = Math.max(8,
+				((GRID_WIDTH - (REGION_PAD * 2)) - (cols - 1) * CELL_GAP) / cols);
 			for (BoardModels.BoardTile tile : board.board)
 			{
 				grid.add(new TileCell(tile, board, images, config, siteUrl, cell,
@@ -780,6 +1121,12 @@ class RsBingoPanel extends PluginPanel
 			if (open != null)
 			{
 				detail.show(open, board);
+
+				// Show the card as well as filling it. On a refresh the tile card is
+				// already up so this changes nothing, but a theme change rebuilds the
+				// deck from scratch and it comes back showing the board — the detail
+				// was being updated behind a grid the reader had not asked for.
+				cards.show(deck, CARD_TILE);
 			}
 			else
 			{
@@ -864,7 +1211,7 @@ class RsBingoPanel extends PluginPanel
 			populating = true;
 			teamBox.removeAllItems();
 			populating = false;
-			grid.removeAll();
+			clearGrid();
 			grid.revalidate();
 			grid.repaint();
 			cards.show(deck, CARD_BOARD);
