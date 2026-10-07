@@ -142,9 +142,38 @@ public class BoardParsingTest
 		assertTrue(prisonBreak.done);
 		assertEquals(2, prisonBreak.items.size());
 		assertEquals("Dragon Warhammer", prisonBreak.items.get(0).label);
-		assertEquals(1, prisonBreak.items.get(0).need);
-		assertEquals(1, prisonBreak.items.get(0).approved);
+		assertTrue(prisonBreak.items.get(0).approved);
 		assertEquals(1, prisonBreak.approvedCount());
 		assertEquals(2, prisonBreak.neededCount());
+	}
+
+	/**
+	 * What an old server does to a new plugin.
+	 *
+	 * The checklist used to carry counts ("need": 4, "approved": 1) and now carries
+	 * one row per slot with booleans. If a plugin built for the new shape cannot
+	 * read the old one, updating the plugin before the site takes the board out
+	 * altogether rather than degrading, and the order of the two uploads matters.
+	 */
+	@Test
+	public void theOldCountShapeDoesNotBreakParsing()
+	{
+		final String oldShape = "{\"eventId\":\"X\",\"board\":["
+			+ "{\"pos\":1,\"title\":\"T\",\"items\":["
+			+ "{\"label\":\"Twisted Bow\",\"need\":4,\"approved\":1,\"pending\":0}]}]}";
+
+		BoardModels.Board parsed = null;
+		Exception failure = null;
+		try
+		{
+			parsed = new com.google.gson.Gson().fromJson(oldShape, BoardModels.Board.class);
+		}
+		catch (Exception e)
+		{
+			failure = e;
+		}
+
+		assertNotNull("an old payload must still parse, got: " + failure, parsed);
+		assertEquals(1, parsed.board.size());
 	}
 }

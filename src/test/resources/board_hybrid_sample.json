@@ -36,17 +36,15 @@
             "items": [
                 {
                     "label": "Dragon Warhammer",
-                    "need": 1,
-                    "approved": 1,
-                    "player": "Ayla",
-                    "pending": 0
+                    "approved": true,
+                    "pending": false,
+                    "player": "Ayla"
                 },
                 {
                     "label": "Elder Maul",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -114,10 +112,9 @@
             "items": [
                 {
                     "label": "Pet Snakeling",
-                    "need": 1,
-                    "approved": 1,
-                    "player": "Ayla",
-                    "pending": 0
+                    "approved": true,
+                    "pending": false,
+                    "player": "Ayla"
                 }
             ],
             "groups": [],

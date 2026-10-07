@@ -103,7 +103,6 @@ public class BoardLogicTest
 		{
 			final BoardModels.TileItem item = new BoardModels.TileItem();
 			item.label = shard;
-			item.need = 1;
 			godsword.items.add(item);
 		}
 		final BoardModels.TileGroup hilts = new BoardModels.TileGroup();
@@ -134,12 +133,15 @@ public class BoardLogicTest
 	public void tilesFallBackToTheChecklistWhenTheServerSendsNoCounts()
 	{
 		// An older deployment omits these fields; the panel still has to draw a bar.
+		// Four of the same thing is four slots, one of them filled.
 		final BoardModels.BoardTile tile = new BoardModels.BoardTile();
-		final BoardModels.TileItem item = new BoardModels.TileItem();
-		item.label = "Twisted Bow";
-		item.need = 4;
-		item.approved = 1;
-		tile.items.add(item);
+		for (int i = 0; i < 4; i++)
+		{
+			final BoardModels.TileItem item = new BoardModels.TileItem();
+			item.label = "Twisted Bow";
+			item.approved = i == 0;
+			tile.items.add(item);
+		}
 
 		assertFalse(tile.hasCounts());
 		assertEquals("1/4", tile.progressText());
@@ -159,11 +161,13 @@ public class BoardLogicTest
 	{
 		final BoardModels.BoardTile t = new BoardModels.BoardTile();
 
-		final BoardModels.TileItem dwh = new BoardModels.TileItem();
-		dwh.label = "Dragon Warhammer";
-		dwh.need = 2;
-		dwh.approved = 1;
-		t.items.add(dwh);
+		for (int i = 0; i < 2; i++)
+		{
+			final BoardModels.TileItem dwh = new BoardModels.TileItem();
+			dwh.label = "Dragon Warhammer";
+			dwh.approved = i == 0;
+			t.items.add(dwh);
+		}
 
 		final BoardModels.TileGroup g = new BoardModels.TileGroup();
 		g.name = "Barrows";

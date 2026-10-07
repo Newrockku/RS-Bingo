@@ -41,10 +41,9 @@
             "items": [
                 {
                     "label": "Thing 1",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -103,10 +102,9 @@
             "items": [
                 {
                     "label": "Thing 3",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -139,10 +137,9 @@
             "items": [
                 {
                     "label": "Thing 4",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -175,10 +172,9 @@
             "items": [
                 {
                     "label": "Thing 5",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -211,10 +207,9 @@
             "items": [
                 {
                     "label": "Thing 6",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -247,10 +242,9 @@
             "items": [
                 {
                     "label": "Thing 7",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -283,10 +277,9 @@
             "items": [
                 {
                     "label": "Thing 8",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -345,10 +338,9 @@
             "items": [
                 {
                     "label": "Thing 10",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -381,10 +373,9 @@
             "items": [
                 {
                     "label": "Thing 11",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -417,10 +408,9 @@
             "items": [
                 {
                     "label": "Thing 12",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -453,10 +443,9 @@
             "items": [
                 {
                     "label": "Thing 13",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -489,10 +478,9 @@
             "items": [
                 {
                     "label": "Thing 14",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -525,10 +513,9 @@
             "items": [
                 {
                     "label": "Thing 15",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -561,10 +548,9 @@
             "items": [
                 {
                     "label": "Thing 16",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -597,10 +583,9 @@
             "items": [
                 {
                     "label": "Thing 17",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -633,10 +618,9 @@
             "items": [
                 {
                     "label": "Thing 18",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -669,10 +653,9 @@
             "items": [
                 {
                     "label": "Thing 19",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -705,10 +688,9 @@
             "items": [
                 {
                     "label": "Thing 20",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -741,10 +723,9 @@
             "items": [
                 {
                     "label": "Thing 21",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -803,10 +784,9 @@
             "items": [
                 {
                     "label": "Thing 23",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -839,10 +819,9 @@
             "items": [
                 {
                     "label": "Thing 24",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],
@@ -875,10 +854,9 @@
             "items": [
                 {
                     "label": "Thing 25",
-                    "need": 1,
-                    "approved": 0,
-                    "player": "",
-                    "pending": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],

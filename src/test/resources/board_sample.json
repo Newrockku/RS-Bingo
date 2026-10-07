@@ -157,13 +157,15 @@
             "items": [
                 {
                     "label": "Dragon Warhammer",
-                    "need": 1,
-                    "approved": 1
+                    "approved": true,
+                    "pending": false,
+                    "player": ""
                 },
                 {
                     "label": "Nex Unique (not pet)",
-                    "need": 1,
-                    "approved": 0
+                    "approved": false,
+                    "pending": false,
+                    "player": ""
                 }
             ],
             "groups": [],

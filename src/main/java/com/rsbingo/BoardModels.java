@@ -1,11 +1,17 @@
 package com.rsbingo;
 
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.JsonAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The shape of plugin_board.php's response. Field names match the JSON exactly so
- * Gson can map it with no annotations.
+ * The shape of plugin_board.php's response. Field names match the JSON exactly, so
+ * Gson maps it by name; the only annotations here are the ones tolerating a field
+ * whose type changed on the server.
  *
  * Note what is NOT here: no scoring inputs, no snapshots, no submissions. The
  * server decides what is complete and how many points a team has; this plugin only
@@ -407,7 +413,10 @@ public class BoardModels
 			int n = 0;
 			for (TileItem i : items)
 			{
-				n += i.approved;
+				if (i.approved)
+				{
+					n++;
+				}
 			}
 			for (TileGroup g : groups)
 			{
@@ -424,11 +433,8 @@ public class BoardModels
 
 		public int neededCount()
 		{
-			int n = 0;
-			for (TileItem i : items)
-			{
-				n += i.need;
-			}
+			// One entry per slot, so the slots are the count.
+			int n = items.size();
 			for (TileGroup g : groups)
 			{
 				n += g.items.size();
@@ -520,15 +526,60 @@ public class BoardModels
 		}
 	}
 
+	/**
+	 * One checklist slot. A tile wanting four of something sends four of these, as
+	 * the website's modal lists them, so each can name whoever filled it.
+	 */
 	public static class TileItem
 	{
 		public String label;
-		public int need;
-		public int approved;
+
+		@JsonAdapter(LenientBoolean.class)
+		public boolean approved;
+
 		/** Submitted and awaiting review — the site's "?" state. */
-		public int pending;
+		@JsonAdapter(LenientBoolean.class)
+		public boolean pending;
 		/** Who sent it. Empty when nobody has, or the submission recorded no player. */
 		public String player;
+	}
+
+	/**
+	 * Reads a boolean that may arrive as a number.
+	 *
+	 * These fields were counts before they were flags, and a site that has not been
+	 * updated yet still sends "approved": 1. Gson refuses a number for a boolean and
+	 * aborts the whole response, so without this a plugin update that reached players
+	 * before the site did would take the board out entirely rather than showing a
+	 * slightly wrong checklist.
+	 */
+	static class LenientBoolean extends TypeAdapter<Boolean>
+	{
+		@Override
+		public Boolean read(JsonReader in) throws IOException
+		{
+			switch (in.peek())
+			{
+				case BOOLEAN:
+					return in.nextBoolean();
+				case NUMBER:
+					return in.nextInt() > 0;
+				case STRING:
+					return Boolean.parseBoolean(in.nextString());
+				case NULL:
+					in.nextNull();
+					return false;
+				default:
+					in.skipValue();
+					return false;
+			}
+		}
+
+		@Override
+		public void write(JsonWriter out, Boolean value) throws IOException
+		{
+			out.value(value != null && value);
+		}
 	}
 
 	public static class TileGroup

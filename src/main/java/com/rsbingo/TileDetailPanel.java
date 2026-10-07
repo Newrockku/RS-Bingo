@@ -611,14 +611,11 @@ class TileDetailPanel extends JPanel
 			return;
 		}
 
+		// One row per slot, each naming its own submitter — a tile wanting four of
+		// something lists it four times, as the website's modal does.
 		for (BoardModels.TileItem item : tile.items)
 		{
-			final boolean done = item.approved >= item.need;
-			checklist.add(row(
-				item.label + (item.need > 1 ? (" (" + item.approved + "/" + item.need + ")") : ""),
-				done,
-				!done && item.pending > 0,
-				item.player));
+			checklist.add(row(item.label, item.approved, !item.approved && item.pending, item.player));
 		}
 
 		for (BoardModels.TileGroup group : tile.groups)
