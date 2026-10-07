@@ -70,7 +70,9 @@ class TeamOverheadOverlay extends Overlay
 				continue;
 			}
 
-			if (!config.overheadOwnPlayer() && player == client.getLocalPlayer())
+			// Never your own character: you know which team you are on, and that is
+			// the most crowded space on screen already.
+			if (player == client.getLocalPlayer())
 			{
 				continue;
 			}

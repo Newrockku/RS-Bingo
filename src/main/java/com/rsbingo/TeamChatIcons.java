@@ -13,6 +13,7 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import net.runelite.client.game.ChatIconManager;
+import net.runelite.client.util.ImageUtil;
 
 /**
  * Team colours beside the names of event participants in chat.
@@ -45,8 +46,12 @@ class TeamChatIcons
 		new Color(0xEBDBF6), // 8 lavender
 	};
 
-	/** Chat lines are short; anything larger than this crowds the text. */
-	private static final int SIZE = 10;
+	/**
+	 * Chat lines are short, so this is a balance: the badge carries a 3x3 grid, and
+	 * below about this it collapses into a coloured smudge. In the same range as the
+	 * client's own rank icons, so it does not push the line height out.
+	 */
+	private static final int SIZE = 12;
 
 	/** Above a head there is room, and it is read at a glance rather than up close. */
 	private static final int OVERHEAD_SIZE = 14;
@@ -64,6 +69,15 @@ class TeamChatIcons
 
 	/** Normalised player name -> team name. */
 	private volatile Map<String, String> players = Collections.emptyMap();
+
+	/**
+	 * The {@code <img=N>} indices this plugin owns.
+	 *
+	 * Kept so our marks can be taken back out of a message that has already been
+	 * written — switching events has to clear the previous event's marks, and the
+	 * only way to tell ours from the client's is to know our own numbers.
+	 */
+	private volatile java.util.Set<Integer> ourIndices = Collections.emptySet();
 
 	@Inject
 	TeamChatIcons(ChatIconManager chatIconManager)
@@ -83,11 +97,11 @@ class TeamChatIcons
 	 * Teams on an older event with no number fall back to name order, which is at
 	 * least stable, rather than to the order they arrived in.
 	 */
-	void setRoster(BoardModels.Board board)
+	boolean setRoster(BoardModels.Board board)
 	{
 		if (board == null || board.teams.isEmpty())
 		{
-			return;
+			return false;
 		}
 
 		final Map<String, Integer> numbered = new LinkedHashMap<>();
@@ -140,15 +154,20 @@ class TeamChatIcons
 			applyColours();
 		}
 
+		// Reported so the caller can leave the chat alone on a refresh that changed
+		// nothing, which is most of them.
+		final boolean changed = !byPlayer.equals(players);
 		players = byPlayer;
+		return changed;
 	}
 
-	/** Registers what is missing and recolours what is not, for the current theme. */
+	/** Registers what is missing and recolours what is not. */
 	private void applyColours()
 	{
+		final java.util.Set<Integer> indices = new java.util.HashSet<>();
 		for (Map.Entry<String, Integer> entry : teamOrder.entrySet())
 		{
-			final BufferedImage image = swatch(teamColour(entry.getValue()));
+			final BufferedImage image = mark(entry.getValue(), SIZE);
 			final Integer existing = iconIds.get(entry.getKey());
 			if (existing == null)
 			{
@@ -157,11 +176,70 @@ class TeamChatIcons
 			else
 			{
 				// Reusing the id rather than registering again: every registration is
-				// permanent for the session, so re-registering on each theme change
-				// would grow the client's icon table for as long as the client runs.
+				// permanent for the session, so re-registering would grow the client's
+				// icon table for as long as the client runs.
 				chatIconManager.updateChatIcon(existing, image);
 			}
+			indices.add(chatIconManager.chatIconIndex(iconIds.get(entry.getKey())));
 		}
+		ourIndices = indices;
+	}
+
+	/** A message with this plugin's marks taken back out, leaving the client's alone. */
+	String stripOwnIcons(String text)
+	{
+		return stripIcons(text, ourIndices);
+	}
+
+	/**
+	 * Removes only the {@code <img=N>} tags whose index is in the given set.
+	 *
+	 * Everything else is copied through untouched, which is the whole point: the
+	 * client's own account-type and rank icons live in the same string and must
+	 * survive, as must anything that merely looks like a tag.
+	 */
+	static String stripIcons(String text, java.util.Set<Integer> indices)
+	{
+		if (text == null || text.isEmpty() || indices.isEmpty() || text.indexOf("<img=") < 0)
+		{
+			return text;
+		}
+
+		final StringBuilder out = new StringBuilder(text.length());
+		int at = 0;
+		while (at < text.length())
+		{
+			final int open = text.indexOf("<img=", at);
+			if (open < 0)
+			{
+				out.append(text, at, text.length());
+				break;
+			}
+			final int close = text.indexOf('>', open);
+			if (close < 0)
+			{
+				out.append(text, at, text.length());
+				break;
+			}
+
+			out.append(text, at, open);
+			final String digits = text.substring(open + 5, close);
+			Integer index = null;
+			try
+			{
+				index = Integer.valueOf(digits.trim());
+			}
+			catch (NumberFormatException ignored)
+			{
+				// Not a number, so not one of ours — keep it as it is.
+			}
+			if (index == null || !indices.contains(index))
+			{
+				out.append(text, open, close + 1);
+			}
+			at = close + 1;
+		}
+		return out.toString();
 	}
 
 	/**
@@ -315,8 +393,7 @@ class TeamChatIcons
 			{
 				return null;
 			}
-			return overheads.computeIfAbsent(team,
-				t -> swatch(teamColour(order), OVERHEAD_SIZE));
+			return overheads.computeIfAbsent(team, t -> mark(order, OVERHEAD_SIZE));
 		}
 	}
 
@@ -339,6 +416,49 @@ class TeamChatIcons
 	private static BufferedImage swatch(Color colour)
 	{
 		return swatch(colour, SIZE);
+	}
+
+	/**
+	 * The organiser's badge for a team, scaled to the size asked for, or null when
+	 * there is none to load.
+	 *
+	 * Scaled from the 64px original on every call rather than at build time: the two
+	 * sizes this is drawn at are far enough apart that one bitmap cannot serve both,
+	 * and the results are cached by the callers anyway.
+	 */
+	private static BufferedImage badge(int order, int size)
+	{
+		final int number = Math.floorMod(order, TEAM_COLOURS.length) + 1;
+		final BufferedImage source =
+			ImageUtil.loadImageResource(TeamChatIcons.class, "/team_" + number + ".png");
+		if (source == null)
+		{
+			return null;
+		}
+
+		final BufferedImage scaled = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+		final Graphics2D g = scaled.createGraphics();
+		try
+		{
+			// Bilinear rather than nearest: at 10px the badge's grid is finer than the
+			// pixels available, and dropping samples turns it into noise.
+			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+				RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+			g.drawImage(source, 0, 0, size, size, null);
+		}
+		finally
+		{
+			g.dispose();
+		}
+		return scaled;
+	}
+
+	/** The badge, or a plain colour square if the badge could not be loaded. */
+	private static BufferedImage mark(int order, int size)
+	{
+		final BufferedImage badge = badge(order, size);
+		return badge != null ? badge : swatch(teamColour(order), size);
 	}
 
 	/** The badge colour for a team's position in the ordering, wrapping past the eighth. */

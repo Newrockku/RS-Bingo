@@ -52,6 +52,9 @@ public class RsBingoPlugin extends Plugin
 	private TeamChatIcons chatIcons;
 
 	@Inject
+	private net.runelite.client.callback.ClientThread clientThread;
+
+	@Inject
 	private TeamOverheadOverlay overheadOverlay;
 
 	@Inject
@@ -140,7 +143,7 @@ public class RsBingoPlugin extends Plugin
 	{
 		panel = new RsBingoPanel(api, images, config, RsBingoConfig.SITE_URL,
 			this::loadEvent, this::rememberTeam,
-			this::applyTheme, this::switchEvent, chatIcons::setRoster,
+			this::applyTheme, this::switchEvent, this::rosterLoaded,
 			drawManager::requestNextFrameListener);
 	}
 
@@ -294,6 +297,80 @@ public class RsBingoPlugin extends Plugin
 	}
 
 	/**
+	 * Take a board's rosters, and bring the chat already on screen into line.
+	 *
+	 * Only when the roster actually changed, which is almost never on a refresh.
+	 */
+	private void rosterLoaded(BoardModels.Board board)
+	{
+		if (chatIcons.setRoster(board))
+		{
+			restampChat();
+		}
+	}
+
+	/**
+	 * Re-mark every message the chat still holds.
+	 *
+	 * A mark is written into the message when it arrives, so changing event left
+	 * the previous event's teams showing on every line already on screen — the
+	 * overhead marks followed the switch because they are looked up as they are
+	 * drawn, and these were not. Taking ours back out and re-applying puts the
+	 * backlog on the event now being viewed.
+	 */
+	private void restampChat()
+	{
+		clientThread.invoke(() ->
+		{
+			boolean changed = false;
+			for (MessageNode node : client.getMessages())
+			{
+				changed |= restamp(node);
+			}
+			if (changed)
+			{
+				client.refreshChat();
+			}
+		});
+	}
+
+	/** One message, both halves. Returns whether anything moved. */
+	private boolean restamp(MessageNode node)
+	{
+		boolean changed = false;
+
+		final String name = node.getName();
+		if (name != null)
+		{
+			final String bare = chatIcons.stripOwnIcons(name);
+			final String marked = config.chatTeamIcons() && PLAYER_CHAT.contains(node.getType())
+				? chatIcons.decorate(bare) : null;
+			final String wanted = marked != null ? marked : bare;
+			if (!wanted.equals(name))
+			{
+				node.setName(wanted);
+				changed = true;
+			}
+		}
+
+		final String value = node.getValue();
+		if (value != null)
+		{
+			final String bare = chatIcons.stripOwnIcons(value);
+			final String marked = config.dropTeamIcons() && BROADCASTS.contains(node.getType())
+				? chatIcons.decorateBroadcast(bare) : null;
+			final String wanted = marked != null ? marked : bare;
+			if (!wanted.equals(value))
+			{
+				node.setValue(wanted);
+				changed = true;
+			}
+		}
+
+		return changed;
+	}
+
+	/**
 	 * Marks event participants in chat with their team's colour.
 	 *
 	 * Two cases, and they differ in where the name is. A line someone types carries
@@ -372,6 +449,14 @@ public class RsBingoPlugin extends Plugin
 		if ("accountToken".equals(event.getKey()))
 		{
 			loadMyEvents();
+			return;
+		}
+
+		// Turning a chat setting off has to take its marks back out of the lines
+		// already on screen, not merely stop adding new ones.
+		if ("chatTeamIcons".equals(event.getKey()) || "dropTeamIcons".equals(event.getKey()))
+		{
+			restampChat();
 			return;
 		}
 

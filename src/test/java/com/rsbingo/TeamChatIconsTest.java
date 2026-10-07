@@ -113,4 +113,35 @@ public class TeamChatIconsTest
 		assertEquals(TeamChatIcons.teamColour(0), TeamChatIcons.teamColour(8));
 		assertEquals(TeamChatIcons.teamColour(1), TeamChatIcons.teamColour(9));
 	}
+
+	/**
+	 * Changing event has to take the previous event's marks off the lines already
+	 * in the chat — but only ours. The client's account-type and rank icons live
+	 * in the same string and must survive untouched.
+	 */
+	@Test
+	public void onlyOurOwnIconsAreStripped()
+	{
+		final java.util.Set<Integer> ours = new java.util.HashSet<>(java.util.Arrays.asList(30, 31));
+
+		// Ours goes, the client's ironman badge stays.
+		assertEquals("<img=2>Hurt Dark",
+			TeamChatIcons.stripIcons("<img=2><img=30>Hurt Dark", ours));
+
+		// Several of ours, anywhere in the string.
+		assertEquals("<img=2>Hurt Dark said hello",
+			TeamChatIcons.stripIcons("<img=30><img=2>Hurt <img=31>Dark said hello", ours));
+
+		// Nothing of ours present.
+		assertEquals("<img=2>Hurt Dark",
+			TeamChatIcons.stripIcons("<img=2>Hurt Dark", ours));
+
+		// Not a tag at all, and an unclosed one.
+		assertEquals("2 < 3 and 4 > 1", TeamChatIcons.stripIcons("2 < 3 and 4 > 1", ours));
+		assertEquals("<img=30 Hurt Dark", TeamChatIcons.stripIcons("<img=30 Hurt Dark", ours));
+
+		// Nothing registered yet: leave everything alone.
+		assertEquals("<img=30>Hurt Dark",
+			TeamChatIcons.stripIcons("<img=30>Hurt Dark", java.util.Collections.emptySet()));
+	}
 }
