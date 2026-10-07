@@ -47,14 +47,21 @@ class TeamChatIcons
 	};
 
 	/**
-	 * Chat lines are short, so this is a balance: the badge carries a 3x3 grid, and
-	 * below about this it collapses into a coloured smudge. In the same range as the
-	 * client's own rank icons, so it does not push the line height out.
+	 * The room a chat mark may take. The badge is fitted into this rather than drawn
+	 * at it (see {@link #badge}), so the figure is a ceiling, not the size on screen.
+	 * In the same range as the client's own rank icons, so it does not push the line
+	 * height out.
 	 */
 	private static final int SIZE = 12;
 
 	/** Above a head there is room, and it is read at a glance rather than up close. */
 	private static final int OVERHEAD_SIZE = 14;
+
+	/**
+	 * Blank columns on the right of a chat mark, holding the badge off the first
+	 * letter of the name. The client draws the icon hard against what follows it.
+	 */
+	private static final int CHAT_GAP = 3;
 
 	private final ChatIconManager chatIconManager;
 
@@ -167,7 +174,7 @@ class TeamChatIcons
 		final java.util.Set<Integer> indices = new java.util.HashSet<>();
 		for (Map.Entry<String, Integer> entry : teamOrder.entrySet())
 		{
-			final BufferedImage image = mark(entry.getValue(), SIZE);
+			final BufferedImage image = chatMark(entry.getValue());
 			final Integer existing = iconIds.get(entry.getKey());
 			if (existing == null)
 			{
@@ -419,12 +426,18 @@ class TeamChatIcons
 	}
 
 	/**
-	 * The organiser's badge for a team, scaled to the size asked for, or null when
-	 * there is none to load.
+	 * The organiser's badge for a team, at the largest size that fits what was asked
+	 * for without distorting it, or null when there is none to load.
 	 *
-	 * Scaled from the 64px original on every call rather than at build time: the two
-	 * sizes this is drawn at are far enough apart that one bitmap cannot serve both,
-	 * and the results are cached by the callers anyway.
+	 * The badges are pixel art a few pixels across, so the only scales that keep them
+	 * looking like what the organiser drew are whole multiples: anything else lands a
+	 * five-pixel block on four-and-a-bit pixels, and the gaps between the quarters
+	 * smear into grey. So the badge is enlarged by whole steps only, and a request
+	 * for a size that isn't a multiple gets the next one down rather than a blurred
+	 * fit. Callers size themselves off the image they get back.
+	 *
+	 * The one case with no whole step is a badge already larger than the space, which
+	 * is the one place a smooth shrink beats dropping samples.
 	 */
 	private static BufferedImage badge(int order, int size)
 	{
@@ -436,16 +449,19 @@ class TeamChatIcons
 			return null;
 		}
 
-		final BufferedImage scaled = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+		final int from = Math.max(source.getWidth(), source.getHeight());
+		final int steps = from > 0 ? size / from : 0;
+		final int to = steps >= 1 ? from * steps : size;
+
+		final BufferedImage scaled = new BufferedImage(to, to, BufferedImage.TYPE_INT_ARGB);
 		final Graphics2D g = scaled.createGraphics();
 		try
 		{
-			// Bilinear rather than nearest: at 10px the badge's grid is finer than the
-			// pixels available, and dropping samples turns it into noise.
-			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-				RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, steps >= 1
+				? RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR
+				: RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 			g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-			g.drawImage(source, 0, 0, size, size, null);
+			g.drawImage(source, 0, 0, to, to, null);
 		}
 		finally
 		{
@@ -459,6 +475,33 @@ class TeamChatIcons
 	{
 		final BufferedImage badge = badge(order, size);
 		return badge != null ? badge : swatch(teamColour(order), size);
+	}
+
+	/**
+	 * The chat mark: the badge with empty space on its right.
+	 *
+	 * The client draws a chat icon hard against the next character, so without this
+	 * the badge touches the first letter of the name. The client's own account-type
+	 * icons carry their spacing inside the image for the same reason, and doing it
+	 * here rather than inserting a space after the tag keeps the name itself exactly
+	 * what the server sent — a space in there would travel into every name
+	 * comparison the rest of this class makes.
+	 */
+	private static BufferedImage chatMark(int order)
+	{
+		final BufferedImage badge = mark(order, SIZE);
+		final BufferedImage padded = new BufferedImage(
+			badge.getWidth() + CHAT_GAP, badge.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		final Graphics2D g = padded.createGraphics();
+		try
+		{
+			g.drawImage(badge, 0, 0, null);
+		}
+		finally
+		{
+			g.dispose();
+		}
+		return padded;
 	}
 
 	/** The badge colour for a team's position in the ordering, wrapping past the eighth. */
