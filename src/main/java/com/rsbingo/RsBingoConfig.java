@@ -92,6 +92,10 @@ public interface RsBingoConfig extends Config
 		return true;
 	}
 
+	/**
+	 * Off by default: you already know which team you are on, and the space over
+	 * your own character is the most crowded on screen.
+	 */
 	@ConfigItem(
 		keyName = "overheadOwnPlayer",
 		name = "...including yourself",
@@ -100,7 +104,7 @@ public interface RsBingoConfig extends Config
 	)
 	default boolean overheadOwnPlayer()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(
