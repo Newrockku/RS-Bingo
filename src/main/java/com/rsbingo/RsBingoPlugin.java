@@ -4,6 +4,9 @@ import com.google.inject.Provides;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.Player;
+import net.runelite.api.ChatMessageType;
+import net.runelite.api.MessageNode;
+import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import java.awt.image.BufferedImage;
@@ -46,6 +49,15 @@ public class RsBingoPlugin extends Plugin
 	private TileImageCache images;
 
 	@Inject
+	private TeamChatIcons chatIcons;
+
+	@Inject
+	private TeamOverheadOverlay overheadOverlay;
+
+	@Inject
+	private net.runelite.client.ui.overlay.OverlayManager overlayManager;
+
+	@Inject
 	private ConfigManager configManager;
 
 	@Inject
@@ -53,6 +65,32 @@ public class RsBingoPlugin extends Plugin
 
 	@Inject
 	private net.runelite.client.ui.DrawManager drawManager;
+
+	/** Message types that carry another player's name. */
+	/**
+	 * Message types where a participant is named inside the text rather than in the
+	 * name field — drop and loot broadcasts, and the clan's own announcements.
+	 */
+	private static final java.util.Set<ChatMessageType> BROADCASTS =
+		java.util.Collections.unmodifiableSet(java.util.EnumSet.of(
+			ChatMessageType.CLAN_MESSAGE,
+			ChatMessageType.CLAN_GUEST_MESSAGE,
+			ChatMessageType.CLAN_GIM_MESSAGE,
+			ChatMessageType.FRIENDSCHATNOTIFICATION,
+			ChatMessageType.BROADCAST));
+
+	private static final java.util.Set<ChatMessageType> PLAYER_CHAT =
+		java.util.Collections.unmodifiableSet(java.util.EnumSet.of(
+			ChatMessageType.PUBLICCHAT,
+			ChatMessageType.MODCHAT,
+			ChatMessageType.AUTOTYPER,
+			ChatMessageType.MODAUTOTYPER,
+			ChatMessageType.FRIENDSCHAT,
+			ChatMessageType.CLAN_CHAT,
+			ChatMessageType.CLAN_GUEST_CHAT,
+			ChatMessageType.CLAN_GIM_CHAT,
+			ChatMessageType.PRIVATECHAT,
+			ChatMessageType.MODPRIVATECHAT));
 
 	private RsBingoPanel panel;
 	private NavigationButton navButton;
@@ -85,6 +123,7 @@ public class RsBingoPlugin extends Plugin
 			.build();
 
 		clientToolbar.addNavigation(navButton);
+		overlayManager.add(overheadOverlay);
 
 		loadThemes();
 		loadMyEvents();
@@ -101,7 +140,8 @@ public class RsBingoPlugin extends Plugin
 	{
 		panel = new RsBingoPanel(api, images, config, RsBingoConfig.SITE_URL,
 			this::loadEvent, this::rememberTeam,
-			this::applyTheme, this::switchEvent, drawManager::requestNextFrameListener);
+			this::applyTheme, this::switchEvent, chatIcons::setRoster,
+			drawManager::requestNextFrameListener);
 	}
 
 	/**
@@ -201,6 +241,7 @@ public class RsBingoPlugin extends Plugin
 	protected void shutDown()
 	{
 		cancelRefresh();
+		overlayManager.remove(overheadOverlay);
 		clientToolbar.removeNavigation(navButton);
 		panel = null;
 		navButton = null;
@@ -250,6 +291,59 @@ public class RsBingoPlugin extends Plugin
 
 		knownPlayer = name;
 		panel.setLocalPlayer(name);
+	}
+
+	/**
+	 * Marks event participants in chat with their team's colour.
+	 *
+	 * Two cases, and they differ in where the name is. A line someone types carries
+	 * it in the message's name field; a drop or loot broadcast carries it inside the
+	 * text instead, so the icon has to be placed in the message body.
+	 *
+	 * Both live in one method because RuneLite's event bus derives the event type
+	 * from the method name — two subscribers for ChatMessage would both have to be
+	 * called onChatMessage, and the plugin refuses to start.
+	 *
+	 * The client's own icons are kept either way: an ironman badge stays where it
+	 * was and ours goes beside it.
+	 */
+	@Subscribe
+	public void onChatMessage(ChatMessage event)
+	{
+		final MessageNode node = event.getMessageNode();
+		if (node == null)
+		{
+			return;
+		}
+
+		boolean changed = false;
+
+		if (config.chatTeamIcons() && PLAYER_CHAT.contains(event.getType()))
+		{
+			final String name = chatIcons.decorate(node.getName());
+			if (name != null)
+			{
+				node.setName(name);
+				changed = true;
+			}
+		}
+
+		if (config.dropTeamIcons() && BROADCASTS.contains(event.getType()))
+		{
+			final String text = chatIcons.decorateBroadcast(node.getValue());
+			if (text != null)
+			{
+				node.setValue(text);
+				changed = true;
+			}
+		}
+
+		if (changed)
+		{
+			// The line has already been laid out by the time this runs, so it has to
+			// be redrawn for the change to appear.
+			client.refreshChat();
+		}
 	}
 
 	@Subscribe

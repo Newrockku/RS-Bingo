@@ -212,6 +212,12 @@ public class BoardModels
 
 	public static class TeamSummary
 	{
+		/**
+		 * The event's own team number, 1-8, which names the organiser's team badge.
+		 * 0 on an event that never set one.
+		 */
+		public int number;
+
 		public String name;
 		public int points;
 		public List<String> players = new ArrayList<>();

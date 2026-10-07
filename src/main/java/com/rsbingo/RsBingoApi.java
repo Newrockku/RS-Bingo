@@ -81,6 +81,7 @@ public class RsBingoApi
 			@Override
 			public void onFailure(Call call, IOException e)
 			{
+				log.warn("rs-bingo board fetch failed: {}", reason(e));
 				log.debug("rs-bingo board fetch failed", e);
 				onError.accept(describe(e));
 			}
@@ -190,6 +191,7 @@ public class RsBingoApi
 			@Override
 			public void onFailure(Call call, IOException e)
 			{
+				log.warn("rs-bingo event list failed: {}", reason(e));
 				log.debug("rs-bingo event list failed", e);
 				onError.accept(describe(e));
 			}
@@ -266,6 +268,7 @@ public class RsBingoApi
 			@Override
 			public void onFailure(Call call, IOException e)
 			{
+				log.warn("rs-bingo submission failed: {}", reason(e));
 				log.debug("rs-bingo submission failed", e);
 				onError.accept(describe(e));
 			}
@@ -339,6 +342,20 @@ public class RsBingoApi
 	 * and one with a broken clock rejecting the certificate all looked identical,
 	 * and the only way to tell them apart was to reproduce it yourself.
 	 */
+	/**
+	 * One line naming what actually went wrong, for the client log.
+	 *
+	 * The panel's wording is for the player; this is for whoever they send their
+	 * log to. "PKIX path building failed" and "certificate expired" both read as
+	 * "secure connection failed" on screen but mean entirely different fixes, and
+	 * at debug level neither was ever seen.
+	 */
+	private static String reason(IOException e)
+	{
+		final String message = e.getMessage();
+		return e.getClass().getSimpleName() + (message == null ? "" : (": " + message));
+	}
+
 	private static String describe(IOException e)
 	{
 		final String host = HttpUrl.parse(RsBingoConfig.SITE_URL) != null
@@ -355,8 +372,12 @@ public class RsBingoApi
 		}
 		if (e instanceof SSLException)
 		{
-			return "Secure connection to " + host + " failed. Check your system clock, "
-				+ "or whether a firewall or VPN is inspecting traffic.";
+			// Antivirus first: on a home machine HTTPS scanning is far and away the
+			// usual cause. It re-signs traffic with its own certificate, which the
+			// browser trusts because the installer added it to Windows, and Java does
+			// not because it keeps its own list.
+			return "Secure connection to " + host + " failed. Usually antivirus HTTPS "
+				+ "scanning, a VPN, or a wrong system clock.";
 		}
 		if (e instanceof ConnectException)
 		{

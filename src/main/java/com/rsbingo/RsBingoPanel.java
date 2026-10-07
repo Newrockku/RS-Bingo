@@ -50,6 +50,9 @@ class RsBingoPanel extends PluginPanel
 	private final Consumer<String> onTeamSelected;
 	private final Consumer<BoardModels.Theme> onThemeSelected;
 	private final Consumer<String> onEventSelected;
+
+	/** Told about every board that arrives, whichever request fetched it. */
+	private final Consumer<BoardModels.Board> onBoardLoaded;
 	private final ScreenshotSource screenshots;
 
 	/** Grabs the next rendered game frame. Supplied by the plugin, which has DrawManager. */
@@ -60,7 +63,12 @@ class RsBingoPanel extends PluginPanel
 	private final TileImageCache images;
 
 	private final JComboBox<BoardModels.TeamSummary> teamBox = new JComboBox<>();
-	private final JLabel statusLabel = new JLabel();
+	/**
+	 * Wraps rather than clips. This line doubles as the error channel, and a
+	 * JLabel cut "Secure connection to rs-bingo.com failed. Check your system
+	 * clock..." off at "Ch...", hiding every part that said what to do.
+	 */
+	private final JTextArea statusLabel = Brand.wrapping(FontManager.getRunescapeSmallFont(), Brand.TEXT_DIM);
 	/** Wraps rather than clips: event names are organiser-supplied and can be long. */
 	private final JTextArea headerLabel = new JTextArea();
 	/**
@@ -326,6 +334,7 @@ class RsBingoPanel extends PluginPanel
 	RsBingoPanel(RsBingoApi api, TileImageCache images, RsBingoConfig config, String siteUrl,
 				 Runnable onEventCodeChanged, Consumer<String> onTeamSelected,
 				 Consumer<BoardModels.Theme> onThemeSelected, Consumer<String> onEventSelected,
+				 Consumer<BoardModels.Board> onBoardLoaded,
 				 ScreenshotSource screenshots)
 	{
 		super(false);
@@ -337,6 +346,7 @@ class RsBingoPanel extends PluginPanel
 		this.onTeamSelected = onTeamSelected;
 		this.onThemeSelected = onThemeSelected;
 		this.onEventSelected = onEventSelected;
+		this.onBoardLoaded = onBoardLoaded;
 		this.screenshots = screenshots;
 
 		// Listeners are attached once, here. buildUi() runs again on every theme
@@ -436,8 +446,6 @@ class RsBingoPanel extends PluginPanel
 		headerLabel.setFocusable(false);
 		headerLabel.setOpaque(false);
 
-		statusLabel.setFont(FontManager.getRunescapeSmallFont());
-		statusLabel.setForeground(Brand.TEXT_DIM);
 		statusLabel.setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
 
 		countdown.setFont(FontManager.getRunescapeSmallFont());
@@ -710,7 +718,7 @@ class RsBingoPanel extends PluginPanel
 
 	void setStatus(String text)
 	{
-		SwingUtilities.invokeLater(() -> statusLabel.setText(text == null ? "" : text));
+		SwingUtilities.invokeLater(() -> Brand.setWrapped(statusLabel, text == null ? "" : text));
 	}
 
 	/** Event summary + team list; selects a team and loads its board. */
@@ -720,8 +728,9 @@ class RsBingoPanel extends PluginPanel
 		{
 			current = board;
 			openTilePos = null;
+			onBoardLoaded.accept(board);
 			headerLabel.setText(board.name == null ? "" : board.name);
-			statusLabel.setText(board.teams.size() + (board.teams.size() == 1 ? " team" : " teams"));
+			Brand.setWrapped(statusLabel, board.teams.size() + (board.teams.size() == 1 ? " team" : " teams"));
 
 			populating = true;
 			teamBox.removeAllItems();
@@ -1094,6 +1103,7 @@ class RsBingoPanel extends PluginPanel
 		SwingUtilities.invokeLater(() ->
 		{
 			current = board;
+			onBoardLoaded.accept(board);
 
 			int pts = 0;
 			for (BoardModels.TeamSummary t : board.teams)
@@ -1119,7 +1129,7 @@ class RsBingoPanel extends PluginPanel
 					done++;
 				}
 			}
-			statusLabel.setText(pts + " pts  ·  " + done + "/" + placed + " tiles");
+			Brand.setWrapped(statusLabel, pts + " pts  ·  " + done + "/" + placed + " tiles");
 			applyCountdown(board);
 			buildStandings(board, board.team);
 			buildRoster(teamNamed(board, board.team));

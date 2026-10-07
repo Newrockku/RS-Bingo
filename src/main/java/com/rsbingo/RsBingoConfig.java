@@ -60,6 +60,50 @@ public interface RsBingoConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "chatTeamIcons",
+		name = "Team icons in chat",
+		description = "Mark event participants in chat with their team's colour.",
+		position = 5
+	)
+	default boolean chatTeamIcons()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "dropTeamIcons",
+		name = "Team icons on drops",
+		description = "Mark participants named in drop and loot broadcasts.",
+		position = 6
+	)
+	default boolean dropTeamIcons()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "overheadTeamIcons",
+		name = "Team icons above players",
+		description = "Draw a participant's team colour over their head in game.",
+		position = 7
+	)
+	default boolean overheadTeamIcons()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "overheadOwnPlayer",
+		name = "...including yourself",
+		description = "Draw the team colour over your own character too.",
+		position = 8
+	)
+	default boolean overheadOwnPlayer()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "showTileImages",
 		name = "Show tile images",
 		description = "Draw each tile's artwork. Turn off to save bandwidth - a board's "
